@@ -32,6 +32,31 @@ namespace Apps.SFTP
             }
         }
 
+        [Action("Get file information", Description = "Get file information")]
+        public GetFileInformationResponse GetFileInformation(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+           [ActionParameter] GetFileInformationRequest input)
+        {
+            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            {
+                var fileInfo = client.Get(input.FilePath);
+                return new GetFileInformationResponse()
+                {
+                    Size = fileInfo.Attributes.Size,
+                    Path = fileInfo.FullName
+                };    
+            }
+        }
+
+        [Action("Rename file", Description = "Rename file")]
+        public void RenameFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+           [ActionParameter] RenameFileRequest input)
+        {
+            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            {
+                client.RenameFile(input.OldPath, input.NewPath);
+            }
+        }
+
         [Action("Download file", Description = "Download file by path")]
         public DownloadFileResponse DownloadFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
            [ActionParameter] DownloadFileRequest input)

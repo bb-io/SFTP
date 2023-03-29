@@ -88,6 +88,16 @@ namespace Apps.SFTP
             }
         }
 
+        [Action("Delete file", Description = "Delete file by path")]
+        public void DeleteFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+           [ActionParameter] DeleteFileRequest input)
+        {
+            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            {
+                client.DeleteFile(input.FilePath);  
+            }
+        }
+
         [Action("Create directory", Description = "Create directory by path")]
         public void CreateDirectory(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
            [ActionParameter] CreateDirectoryRequest input)

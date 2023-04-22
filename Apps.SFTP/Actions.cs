@@ -8,6 +8,7 @@ using Apps.SFTP.Models.Requests;
 using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Dtos;
 using static System.Net.WebRequestMethods;
+using Blackbird.Applications.Sdk.Common.Actions;
 
 namespace Apps.SFTP
 {
@@ -15,10 +16,10 @@ namespace Apps.SFTP
     public class Actions
     {
         [Action("List directory", Description = "List specified directory")]
-        public ListDirectoryResponse ListDirectory(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public ListDirectoryResponse ListDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] ListDirectoryRequest input)
         {
-            using(var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value)) {
+            using(var client = new BlackbirdSftpClient(authenticationCredentialsProviders)) {
                 
                 var files = client.ListDirectory(input.Path).Select(i => new DirectoryItemDto()
                 {
@@ -33,10 +34,10 @@ namespace Apps.SFTP
         }
 
         [Action("Get file information", Description = "Get file information")]
-        public GetFileInformationResponse GetFileInformation(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public GetFileInformationResponse GetFileInformation(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] GetFileInformationRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 var fileInfo = client.Get(input.FilePath);
                 return new GetFileInformationResponse()
@@ -48,20 +49,20 @@ namespace Apps.SFTP
         }
 
         [Action("Rename file", Description = "Rename file")]
-        public void RenameFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public void RenameFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] RenameFileRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 client.RenameFile(input.OldPath, input.NewPath);
             }
         }
 
         [Action("Download file", Description = "Download file by path")]
-        public DownloadFileResponse DownloadFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public DownloadFileResponse DownloadFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] DownloadFileRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 using (var stream = new MemoryStream())
                 {
@@ -76,10 +77,10 @@ namespace Apps.SFTP
         }
 
         [Action("Upload file", Description = "Upload file by path")]
-        public void UploadFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public void UploadFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] UploadFileRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 using (var stream = new MemoryStream(input.File))
                 {
@@ -89,42 +90,33 @@ namespace Apps.SFTP
         }
 
         [Action("Delete file", Description = "Delete file by path")]
-        public void DeleteFile(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public void DeleteFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] DeleteFileRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 client.DeleteFile(input.FilePath);  
             }
         }
 
         [Action("Create directory", Description = "Create directory by path")]
-        public void CreateDirectory(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public void CreateDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] CreateDirectoryRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
             }
         }
 
         [Action("Delete directory", Description = "Delete directory")]
-        public void DeleteDirectory(string host, string port, string login, AuthenticationCredentialsProvider authenticationCredentialsProvider,
+        public void DeleteDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
            [ActionParameter] DeleteDirectoryRequest input)
         {
-            using (var client = GetSftpClient(host, port, login, authenticationCredentialsProvider.Value))
+            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
             {
                 client.DeleteDirectory(input.Path);
             }
-        }
-
-        private SftpClient GetSftpClient(string host, string port, string login, string password)
-        {
-            var connectionInfo = new ConnectionInfo(host, Int32.Parse(port), login, 
-                new PasswordAuthenticationMethod(login, password));
-            var client = new SftpClient(connectionInfo);
-            client.Connect();
-            return client;
         }
     }
 }

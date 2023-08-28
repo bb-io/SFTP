@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using File = Blackbird.Applications.Sdk.Common.Files.File;
 
-namespace Apps.SFTP.Models.Responses
+namespace Apps.SFTP.Models.Responses;
+
+public class DownloadFileResponse
 {
-    public class DownloadFileResponse
-    {
-        public byte[] File { get; set; }
-    }
+    public File File { get; set; }
 }

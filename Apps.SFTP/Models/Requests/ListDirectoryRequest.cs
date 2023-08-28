@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Apps.SFTP.Models.Requests;
 
-namespace Apps.SFTP.Models.Requests
+public class ListDirectoryRequest
 {
-    public class ListDirectoryRequest
-    {
-        public string Path { get; set; }
-    }
+    public string Path { get; set; }
 }

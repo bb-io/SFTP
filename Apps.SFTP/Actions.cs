@@ -1,122 +1,119 @@
-﻿using Blackbird.Applications.Sdk.Common;
+﻿using System.Net.Mime;
+using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Authentication;
-using System.IO;
-using System.Collections.Generic;
-using System;
-using Renci.SshNet;
 using Apps.SFTP.Models.Requests;
 using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Dtos;
-using static System.Net.WebRequestMethods;
 using Blackbird.Applications.Sdk.Common.Actions;
 
-namespace Apps.SFTP
+namespace Apps.SFTP;
+
+[ActionList]
+public class Actions
 {
-    [ActionList]
-    public class Actions
+    [Action("List directory", Description = "List specified directory")]
+    public ListDirectoryResponse ListDirectory(
+        IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] ListDirectoryRequest input)
     {
-        [Action("List directory", Description = "List specified directory")]
-        public ListDirectoryResponse ListDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] ListDirectoryRequest input)
+        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
         {
-            using(var client = new BlackbirdSftpClient(authenticationCredentialsProviders)) {
-                
-                var files = client.ListDirectory(input.Path).Select(i => new DirectoryItemDto()
-                {
-                    Name = i.Name
-                }).ToList();
-
-                return new ListDirectoryResponse()
-                {
-                    DirectoriesItems = files
-                };
-            }
-        }
-
-        [Action("Get file information", Description = "Get file information")]
-        public GetFileInformationResponse GetFileInformation(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] GetFileInformationRequest input)
-        {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+            var files = client.ListDirectory(input.Path).Select(i => new DirectoryItemDto()
             {
-                var fileInfo = client.Get(input.FilePath);
-                return new GetFileInformationResponse()
-                {
-                    Size = fileInfo.Attributes.Size,
-                    Path = fileInfo.FullName
-                };    
-            }
-        }
+                Name = i.Name
+            }).ToList();
 
-        [Action("Rename file", Description = "Rename file")]
-        public void RenameFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] RenameFileRequest input)
-        {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+            return new ListDirectoryResponse()
             {
-                client.RenameFile(input.OldPath, input.NewPath);
-            }
+                DirectoriesItems = files
+            };
         }
+    }
 
-        [Action("Download file", Description = "Download file by path")]
-        public DownloadFileResponse DownloadFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] DownloadFileRequest input)
+    [Action("Get file information", Description = "Get file information")]
+    public GetFileInformationResponse GetFileInformation(
+        IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] GetFileInformationRequest input)
+    {
+        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
         {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+            var fileInfo = client.Get(input.FilePath);
+            return new GetFileInformationResponse()
             {
-                using (var stream = new MemoryStream())
-                {
-                    client.DownloadFile(input.Path, stream);
-                    var fileData = stream.ToArray();
-                    return new DownloadFileResponse()
-                    {
-                        File = fileData
-                    };
-                }   
-            }
+                Size = fileInfo.Attributes.Size,
+                Path = fileInfo.FullName
+            };
         }
+    }
 
-        [Action("Upload file", Description = "Upload file by path")]
-        public void UploadFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] UploadFileRequest input)
+    [Action("Rename file", Description = "Rename file")]
+    public void RenameFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] RenameFileRequest input)
+    {
+        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
         {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
-            {
-                using (var stream = new MemoryStream(input.File))
-                {
-                    client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{input.FileName}");
-                }
-            }
+            client.RenameFile(input.OldPath, input.NewPath);
         }
+    }
 
-        [Action("Delete file", Description = "Delete file by path")]
-        public void DeleteFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] DeleteFileRequest input)
+    [Action("Download file", Description = "Download file by path")]
+    public DownloadFileResponse DownloadFile(
+        IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] DownloadFileRequest input)
+    {
+        using var client = new BlackbirdSftpClient(authenticationCredentialsProviders);
+        using var stream = new MemoryStream();
+        
+        client.DownloadFile(input.Path, stream);
+        var fileData = stream.ToArray();
+        
+        return new()
         {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+            File = new(fileData)
             {
-                client.DeleteFile(input.FilePath);  
+                ContentType = MediaTypeNames.Application.Octet
             }
+        };
+    }
+
+    [Action("Upload file", Description = "Upload file by path")]
+    public void UploadFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] UploadFileRequest input)
+    {
+        using var client = new BlackbirdSftpClient(authenticationCredentialsProviders);
+        using var stream = new MemoryStream(input.File.Bytes);
+
+        var fileName = input.FileName ?? input.File.Name;
+        client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
+    }
+
+    [Action("Delete file", Description = "Delete file by path")]
+    public void DeleteFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] DeleteFileRequest input)
+    {
+        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+        {
+            client.DeleteFile(input.FilePath);
         }
+    }
 
-        [Action("Create directory", Description = "Create directory by path")]
-        public void CreateDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] CreateDirectoryRequest input)
+    [Action("Create directory", Description = "Create directory by path")]
+    public void CreateDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] CreateDirectoryRequest input)
+    {
+        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
         {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
-            {
-                client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
-            }
+            client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
         }
+    }
 
-        [Action("Delete directory", Description = "Delete directory")]
-        public void DeleteDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-           [ActionParameter] DeleteDirectoryRequest input)
+    [Action("Delete directory", Description = "Delete directory")]
+    public void DeleteDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+        [ActionParameter] DeleteDirectoryRequest input)
+    {
+        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
         {
-            using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
-            {
-                client.DeleteDirectory(input.Path);
-            }
+            client.DeleteDirectory(input.Path);
         }
     }
 }

@@ -5,12 +5,21 @@ using Apps.SFTP.Models.Requests;
 using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Dtos;
 using Blackbird.Applications.Sdk.Common.Actions;
+using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
+using Blackbird.Applications.Sdk.Utils.Extensions.Files;
 
 namespace Apps.SFTP;
 
 [ActionList]
 public class Actions
 {
+    private readonly IFileManagementClient _fileManagementClient;
+
+    public Actions(IFileManagementClient fileManagementClient)
+    {
+        _fileManagementClient = fileManagementClient;
+    }
+
     [Action("List directory", Description = "List specified directory")]
     public ListDirectoryResponse ListDirectory(
         IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
@@ -57,7 +66,7 @@ public class Actions
     }
 
     [Action("Download file", Description = "Download file by path")]
-    public DownloadFileResponse DownloadFile(
+    public async Task<DownloadFileResponse> DownloadFile(
         IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
         [ActionParameter] DownloadFileRequest input)
     {
@@ -65,15 +74,8 @@ public class Actions
         using var stream = new MemoryStream();
         
         client.DownloadFile(input.Path, stream);
-        var fileData = stream.ToArray();
-        
-        return new()
-        {
-            File = new(fileData)
-            {
-                ContentType = MediaTypeNames.Application.Octet
-            }
-        };
+        var file = await _fileManagementClient.UploadAsync(stream, MediaTypeNames.Application.Octet, Path.GetFileName(input.Path));
+        return new() { File = file };
     }
 
     [Action("Upload file", Description = "Upload file by path")]
@@ -81,7 +83,7 @@ public class Actions
         [ActionParameter] UploadFileRequest input)
     {
         using var client = new BlackbirdSftpClient(authenticationCredentialsProviders);
-        using var stream = new MemoryStream(input.File.Bytes);
+        using var stream = _fileManagementClient.DownloadAsync(input.File).Result;
 
         var fileName = input.FileName ?? input.File.Name;
         client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");

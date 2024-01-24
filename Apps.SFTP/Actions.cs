@@ -20,16 +20,17 @@ public class Actions
         _fileManagementClient = fileManagementClient;
     }
 
-    [Action("List directory", Description = "List specified directory")]
+    [Action("List directory files", Description = "List all files in specified directory")]
     public ListDirectoryResponse ListDirectory(
         IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
         [ActionParameter] ListDirectoryRequest input)
     {
         using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
         {
-            var files = client.ListDirectory(input.Path).Select(i => new DirectoryItemDto()
+            var files = client.ListDirectory(input.Path).Where(x => x.IsRegularFile).Select(i => new DirectoryItemDto()
             {
-                Name = i.Name
+                Name = i.Name,
+                Path = i.FullName,
             }).ToList();
 
             return new ListDirectoryResponse()
@@ -39,23 +40,23 @@ public class Actions
         }
     }
 
-    [Action("Get file information", Description = "Get file information")]
-    public GetFileInformationResponse GetFileInformation(
-        IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] GetFileInformationRequest input)
-    {
-        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
-        {
-            var fileInfo = client.Get(input.FilePath);
-            return new GetFileInformationResponse()
-            {
-                Size = fileInfo.Attributes.Size,
-                Path = fileInfo.FullName
-            };
-        }
-    }
+    //[Action("Get file information", Description = "Get file information")]
+    //public GetFileInformationResponse GetFileInformation(
+    //    IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
+    //    [ActionParameter] GetFileInformationRequest input)
+    //{
+    //    using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+    //    {
+    //        var fileInfo = client.Get(input.FilePath);
+    //        return new GetFileInformationResponse()
+    //        {
+    //            Size = fileInfo.Attributes.Size,
+    //            Path = fileInfo.FullName
+    //        };
+    //    }
+    //}
 
-    [Action("Rename file", Description = "Rename file")]
+    [Action("Rename file", Description = "Rename a path from old to new")]
     public void RenameFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
         [ActionParameter] RenameFileRequest input)
     {
@@ -99,7 +100,7 @@ public class Actions
         }
     }
 
-    [Action("Create directory", Description = "Create directory by path")]
+    [Action("Create directory", Description = "Create anew directory inside of a path")]
     public void CreateDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
         [ActionParameter] CreateDirectoryRequest input)
     {

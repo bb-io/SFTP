@@ -60,7 +60,10 @@ public class Actions : BaseInvocable
         
         client.DownloadFile(input.Path, stream);
 
-        var file = await _fileManagementClient.UploadAsync(stream, MediaTypeNames.Text.Xml, Path.GetFileName(input.Path));
+        MimeTypes.FallbackMimeType = MediaTypeNames.Application.Octet;
+        var mimeType = MimeTypes.GetMimeType(input.Path);
+
+        var file = await _fileManagementClient.UploadAsync(new MemoryStream(stream.GetBuffer()), mimeType, Path.GetFileName(input.Path));
         return new() { File = file };
     }
 

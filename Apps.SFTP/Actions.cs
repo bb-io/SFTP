@@ -7,25 +7,28 @@ using Apps.SFTP.Dtos;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Utils.Extensions.Files;
+using Blackbird.Applications.Sdk.Common.Invocation;
+using System.Text;
+using RestSharp;
 
 namespace Apps.SFTP;
 
 [ActionList]
-public class Actions
+public class Actions : BaseInvocable
 {
     private readonly IFileManagementClient _fileManagementClient;
+    private AuthenticationCredentialsProvider[] Creds =>
+        InvocationContext.AuthenticationCredentialsProviders.ToArray();
 
-    public Actions(IFileManagementClient fileManagementClient)
+    public Actions(InvocationContext context, IFileManagementClient fileManagementClient) : base(context)
     {
         _fileManagementClient = fileManagementClient;
     }
 
     [Action("List directory files", Description = "List all files in specified directory")]
-    public ListDirectoryResponse ListDirectory(
-        IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] ListDirectoryRequest input)
+    public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
-        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+        using (var client = new BlackbirdSftpClient(Creds))
         {
             var files = client.ListDirectory(input.Path).Where(x => x.IsRegularFile).Select(i => new DirectoryItemDto()
             {
@@ -40,50 +43,31 @@ public class Actions
         }
     }
 
-    //[Action("Get file information", Description = "Get file information")]
-    //public GetFileInformationResponse GetFileInformation(
-    //    IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-    //    [ActionParameter] GetFileInformationRequest input)
-    //{
-    //    using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
-    //    {
-    //        var fileInfo = client.Get(input.FilePath);
-    //        return new GetFileInformationResponse()
-    //        {
-    //            Size = fileInfo.Attributes.Size,
-    //            Path = fileInfo.FullName
-    //        };
-    //    }
-    //}
-
     [Action("Rename file", Description = "Rename a path from old to new")]
-    public void RenameFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] RenameFileRequest input)
+    public void RenameFile([ActionParameter] RenameFileRequest input)
     {
-        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+        using (var client = new BlackbirdSftpClient(Creds))
         {
             client.RenameFile(input.OldPath, input.NewPath);
         }
     }
 
     [Action("Download file", Description = "Download file by path")]
-    public async Task<DownloadFileResponse> DownloadFile(
-        IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] DownloadFileRequest input)
+    public async Task<DownloadFileResponse> DownloadFile([ActionParameter] DownloadFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(authenticationCredentialsProviders);
+        using var client = new BlackbirdSftpClient(Creds);
         using var stream = new MemoryStream();
         
         client.DownloadFile(input.Path, stream);
-        var file = await _fileManagementClient.UploadAsync(stream, MediaTypeNames.Application.Octet, Path.GetFileName(input.Path));
+
+        var file = await _fileManagementClient.UploadAsync(stream, MediaTypeNames.Text.Xml, Path.GetFileName(input.Path));
         return new() { File = file };
     }
 
     [Action("Upload file", Description = "Upload file by path")]
-    public void UploadFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] UploadFileRequest input)
+    public void UploadFile([ActionParameter] UploadFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(authenticationCredentialsProviders);
+        using var client = new BlackbirdSftpClient(Creds);
         using var stream = _fileManagementClient.DownloadAsync(input.File).Result;
 
         var fileName = input.FileName ?? input.File.Name;
@@ -91,30 +75,27 @@ public class Actions
     }
 
     [Action("Delete file", Description = "Delete file by path")]
-    public void DeleteFile(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] DeleteFileRequest input)
+    public void DeleteFile([ActionParameter] DeleteFileRequest input)
     {
-        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+        using (var client = new BlackbirdSftpClient(Creds))
         {
             client.DeleteFile(input.FilePath);
         }
     }
 
     [Action("Create directory", Description = "Create anew directory inside of a path")]
-    public void CreateDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] CreateDirectoryRequest input)
+    public void CreateDirectory([ActionParameter] CreateDirectoryRequest input)
     {
-        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+        using (var client = new BlackbirdSftpClient(Creds))
         {
             client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
         }
     }
 
     [Action("Delete directory", Description = "Delete directory")]
-    public void DeleteDirectory(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders,
-        [ActionParameter] DeleteDirectoryRequest input)
+    public void DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
     {
-        using (var client = new BlackbirdSftpClient(authenticationCredentialsProviders))
+        using (var client = new BlackbirdSftpClient(Creds))
         {
             client.DeleteDirectory(input.Path);
         }

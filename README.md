@@ -40,6 +40,14 @@ Before you can connect you need to make sure that:
 - **On files created or updated** This polling event triggers when file is created or updated on server.
 - **On files deleted** This polling event triggers when file is deleted from server.
 
+## Example 
+
+Here is an example of how you can use the SFTP app in a workflow:
+
+![example](image/README/example.png)
+
+In this example, the workflow starts with the **On files created or updated** event, which triggers when any file is added or updated on SFTP server. Then, the workflow uses the **Download file** action to download the file that was added/updated. In the next step we translate the file via `DeepL` and then upload the translated file to Slack channel.
+
 ## Feedback
 
 Do you want to use this app or do you have feedback on our implementation? Reach out to us using the [established channels](https://www.blackbird.io/) or create an issue.

@@ -90,7 +90,7 @@ namespace Apps.SFTP.Webhooks
                 {
                     filesList.AddRange(ListDirectory(sftpClient, entry.FullName, includeSubfolder));
                 }
-                else
+                else if(!entry.IsDirectory)
                 {
                     filesList.Add(entry);
                 }

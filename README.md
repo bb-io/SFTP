@@ -3,6 +3,9 @@
 Blackbird is the new automation backbone for the language technology industry. Blackbird provides enterprise-scale automation and orchestration with a simple no-code/low-code platform. Blackbird enables ambitious organizations to identify, vet and automate as many processes as possible. Not just localization workflows, but any business and IT process. This repository represents an application that is deployable on Blackbird and usable inside the workflow editor.
 
 ## Introduction
+
+<!-- begin docs -->
+
 SFTP, or Secure File Transfer Protocol, is a secure file transfer protocol that uses secure shell encryption to provide a high level of security for sending and receiving file transfers.
 To use SFTP, you need to have an SFTP server, where files can be uploaded, stored, and retrieved in a downloadable format. An SFTP server is the type of storage location where files are stored and retrieved.
 

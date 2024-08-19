@@ -51,6 +51,10 @@ Here is an example of how you can use the SFTP app in a workflow:
 
 In this example, the workflow starts with the **On files created or updated** event, which triggers when any file is added or updated on SFTP server. Then, the workflow uses the **Download file** action to download the file that was added/updated. In the next step we translate the file via `DeepL` and then upload the translated file to Slack channel.
 
+## Eggs
+
+Check downloadable workflow prototypes featuring this app that you can import to your Nests [here](https://docs.blackbird.io/eggs/storage-to-mt/). 
+
 ## Feedback
 
 Do you want to use this app or do you have feedback on our implementation? Reach out to us using the [established channels](https://www.blackbird.io/) or create an issue.

@@ -17,7 +17,7 @@ public class ConnectionDefinition : IConnectionDefinition
                 new ConnectionProperty("host"){ DisplayName = "Host" },
                 new ConnectionProperty("port"){ DisplayName = "Port"},
                 new ConnectionProperty("login"){ DisplayName = "Username"},
-                new ConnectionProperty("password"){ DisplayName = "Password", Sensitive = true },
+                new ConnectionProperty("password"){ DisplayName = "Password or Private Key", Sensitive = true },
             }
         }
     };

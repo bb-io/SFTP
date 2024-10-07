@@ -1,5 +1,7 @@
 ﻿using Blackbird.Applications.Sdk.Common.Authentication;
 using Renci.SshNet;
+using static System.Net.Mime.MediaTypeNames;
+using System.Text;
 
 namespace Apps.SFTP;
 
@@ -12,7 +14,13 @@ public class BlackbirdSftpClient : SftpClient
         var login = authenticationCredentialsProviders.First(p => p.KeyName == "login").Value;
         var password = authenticationCredentialsProviders.First(p => p.KeyName == "password").Value;
 
-        return new ConnectionInfo(host, Int32.Parse(port), login, new PasswordAuthenticationMethod(login, password));
+        if (!password.Contains("PRIVATE KEY"))
+        {
+            return new ConnectionInfo(host, Int32.Parse(port), login, new PasswordAuthenticationMethod(login, password));
+        }
+        var bytes = Encoding.UTF8.GetBytes(password);
+        var key = new PrivateKeyFile(new MemoryStream(bytes));
+        return new ConnectionInfo(host, Int32.Parse(port), login, new PrivateKeyAuthenticationMethod(login, key));
     }
 
     public BlackbirdSftpClient(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders) : base(GetConnectionInfo(authenticationCredentialsProviders))

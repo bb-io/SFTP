@@ -7,7 +7,6 @@ using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
-using Newtonsoft.Json;
 using RestSharp;
 
 namespace Apps.SFTP;

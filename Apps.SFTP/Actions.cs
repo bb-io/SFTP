@@ -7,6 +7,8 @@ using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
+using Newtonsoft.Json;
+using RestSharp;
 
 namespace Apps.SFTP;
 
@@ -58,10 +60,12 @@ public class Actions : SFTPInvocable
     }
 
     [Action("Upload file", Description = "Upload file by path")]
-    public void UploadFile([ActionParameter] UploadFileRequest input)
+    public async void UploadFile([ActionParameter] UploadFileRequest input)
     {
         using var client = new BlackbirdSftpClient(Creds);
-        using var stream = _fileManagementClient.DownloadAsync(input.File).Result;
+        if (input.File.Url == null) throw new Exception("For some unknown reason the file was not properly saved on Blackbird");
+        var restClient = new RestClient(input.File.Url);
+        using var stream = restClient.DownloadStream(new RestRequest());
 
         var fileName = input.FileName ?? input.File.Name;
         client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");

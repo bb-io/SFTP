@@ -81,7 +81,14 @@ public class Actions : SFTPInvocable
     public void CreateDirectory([ActionParameter] CreateDirectoryRequest input)
     {
         using var client = new BlackbirdSftpClient(Creds);
-        client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
+        try
+        {
+            client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
+        }
+        catch(Exception e)
+        {
+
+        }
     }
 
     [Action("Delete directory", Description = "Delete directory by path")]

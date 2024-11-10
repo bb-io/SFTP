@@ -62,15 +62,15 @@ public class Actions : SFTPInvocable
     }
 
     [Action("Upload file", Description = "Upload file by path")]
-    public void UploadFile([ActionParameter] UploadFileRequest input)
+    public async void UploadFile([ActionParameter] UploadFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
+        using var client = new BlackbirdScpClient(Creds);
         if (input.File.Url == null) throw new Exception("For some unknown reason the file was not properly saved on Blackbird");
         var restClient = new RestClient(input.File.Url);
         using var stream = restClient.DownloadStream(new RestRequest());
 
         var fileName = input.FileName ?? input.File.Name;
-        client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
+        client.Upload(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
         client.Disconnect();
     }
 

@@ -8,8 +8,6 @@ using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 using RestSharp;
-using System.IO;
-using Blackbird.Applications.Sdk.Common.Authentication;
 
 namespace Apps.SFTP;
 

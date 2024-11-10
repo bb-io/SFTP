@@ -30,6 +30,7 @@ public class Actions : SFTPInvocable
             Name = i.Name,
             Path = i.FullName,
         }).ToList();
+        client.Disconnect();
         return new ListDirectoryResponse()
         {
             DirectoriesItems = files
@@ -41,6 +42,7 @@ public class Actions : SFTPInvocable
     {
         using var client = new BlackbirdSftpClient(Creds);
         client.RenameFile(input.OldPath, input.NewPath);
+        client.Disconnect();
     }
 
     [Action("Download file", Description = "Download file by path")]
@@ -55,11 +57,12 @@ public class Actions : SFTPInvocable
         var mimeType = MimeTypes.GetMimeType(input.Path);
 
         var file = await _fileManagementClient.UploadAsync(new MemoryStream(stream.GetBuffer()), mimeType, Path.GetFileName(input.Path));
+        client.Disconnect();
         return new() { File = file };
     }
 
     [Action("Upload file", Description = "Upload file by path")]
-    public async void UploadFile([ActionParameter] UploadFileRequest input)
+    public void UploadFile([ActionParameter] UploadFileRequest input)
     {
         using var client = new BlackbirdSftpClient(Creds);
         if (input.File.Url == null) throw new Exception("For some unknown reason the file was not properly saved on Blackbird");
@@ -68,13 +71,15 @@ public class Actions : SFTPInvocable
 
         var fileName = input.FileName ?? input.File.Name;
         client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
+        client.Disconnect();
     }
 
     [Action("Delete file", Description = "Delete file by path")]
     public void DeleteFile([ActionParameter] DeleteFileRequest input)
     {
-        using (var client = new BlackbirdSftpClient(Creds))
+        using var client = new BlackbirdSftpClient(Creds);
         client.DeleteFile(input.FilePath);
+        client.Disconnect();
     }
 
     [Action("Create directory", Description = "Create new directory by path")]
@@ -85,10 +90,8 @@ public class Actions : SFTPInvocable
         {
             client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
         }
-        catch(Exception e)
-        {
-
-        }
+        catch (Exception) { }
+        client.Disconnect();
     }
 
     [Action("Delete directory", Description = "Delete directory by path")]
@@ -96,5 +99,6 @@ public class Actions : SFTPInvocable
     {
         using var client = new BlackbirdSftpClient(Creds);
         client.DeleteDirectory(input.Path);
+        client.Disconnect();
     }
 }

@@ -25,6 +25,7 @@ public class BlackbirdSftpClient : SftpClient
 
     public BlackbirdSftpClient(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders) : base(GetConnectionInfo(authenticationCredentialsProviders))
     {
+        this.BufferSize = 32 * 1024 * 12;
         this.Connect();
     }
 }

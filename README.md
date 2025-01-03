@@ -42,6 +42,7 @@ Before you can connect you need to make sure that:
 
 - **On files created or updated** This polling event triggers when file is created or updated on server.
 - **On files deleted** This polling event triggers when file is deleted from server.
+- **On directories created** This polling event triggers when directories are created within specified time interval.
 
 ## Example 
 

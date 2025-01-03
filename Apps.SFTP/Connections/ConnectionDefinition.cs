@@ -14,10 +14,10 @@ public class ConnectionDefinition : IConnectionDefinition
             ConnectionUsage = ConnectionUsage.Actions,
             ConnectionProperties = new List<ConnectionProperty>()
             {
-                new ConnectionProperty("host"){ DisplayName = "Host" },
-                new ConnectionProperty("port"){ DisplayName = "Port"},
-                new ConnectionProperty("login"){ DisplayName = "Username"},
-                new ConnectionProperty("password"){ DisplayName = "Password or Private Key", Sensitive = true },
+                new("host"){ DisplayName = "Host" },
+                new("port"){ DisplayName = "Port"},
+                new("login"){ DisplayName = "Username"},
+                new("password"){ DisplayName = "Password or Private Key", Sensitive = true },
             }
         }
     };

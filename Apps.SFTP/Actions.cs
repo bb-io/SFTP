@@ -79,10 +79,14 @@ public class Actions : SFTPInvocable
                 throw new PluginMisconfigurationException("File URL is empty, please fill this field");
 
             var restClient = new RestClient(input.File.Url);
-            using var stream = restClient.DownloadStream(new RestRequest());
+            using var responseStream = restClient.DownloadStream(new RestRequest());
+            using var memoryStream = new MemoryStream();
+
+            await responseStream.CopyToAsync(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
 
             var fileName = input.FileName ?? input.File.Name;
-            client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
+            client.UploadFile(memoryStream, $"{input.Path.TrimEnd('/')}/{fileName}");
             return true;
         });
     }

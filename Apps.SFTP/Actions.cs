@@ -63,7 +63,7 @@ public class Actions : SFTPInvocable
 
             return new DownloadFileResponse { File=file };
         });
-        }
+    }
 
     [Action("Upload file", Description = "Upload file by path")]
     public async void UploadFile([ActionParameter] UploadFileRequest input)

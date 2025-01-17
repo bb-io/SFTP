@@ -28,6 +28,11 @@ namespace Apps.SFTP.Invocables
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
             }
+            finally
+            {
+                if (client.IsConnected)
+                    client.Disconnect();
+            }
         }
 
 
@@ -43,9 +48,10 @@ namespace Apps.SFTP.Invocables
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
             }
-            catch (Exception ex)
+            finally
             {
-                throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
+                if (client.IsConnected)
+                    client.Disconnect();
             }
         }
     }

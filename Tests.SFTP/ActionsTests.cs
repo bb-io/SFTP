@@ -17,7 +17,7 @@ namespace Tests.SFTP
         {
             var client = new Actions(InvocationContext,FileManager);
 
-            var response = client.UploadFile();
+            //var response = client.UploadFile();
             //Assert.IsTrue(result.IsValid);
         }
     }

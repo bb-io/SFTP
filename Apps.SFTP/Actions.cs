@@ -8,6 +8,7 @@ using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 using RestSharp;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 
 namespace Apps.SFTP;
 
@@ -24,17 +25,21 @@ public class Actions : SFTPInvocable
     [Action("List directory files", Description = "List all files in specified directory")]
     public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        var files = client.ListDirectory(input.Path).Where(x => x.IsRegularFile).Select(i => new DirectoryItemDto()
+        return UseClient(client =>
         {
-            Name = i.Name,
-            Path = i.FullName,
-        }).ToList();
-        client.Disconnect();
-        return new ListDirectoryResponse()
-        {
-            DirectoriesItems = files
-        }; 
+            var files = client.ListDirectory(input.Path)
+                .Where(x => x.IsRegularFile)
+                .Select(i => new DirectoryItemDto()
+                {
+                    Name = i.Name,
+                    Path = i.FullName,
+                }).ToList();
+
+            return new ListDirectoryResponse()
+            {
+                DirectoriesItems = files
+            };
+        });
     }
 
     [Action("Rename file", Description = "Rename a path from old to new")]
@@ -68,41 +73,46 @@ public class Actions : SFTPInvocable
     [Action("Upload file", Description = "Upload file by path")]
     public async void UploadFile([ActionParameter] UploadFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        if (input.File.Url == null) throw new Exception("For some unknown reason the file was not properly saved on Blackbird");
-        var restClient = new RestClient(input.File.Url);
-        using var stream = restClient.DownloadStream(new RestRequest());
+        await UseClientAsync(async client =>
+        {
+            if (input.File.Url == null)
+                throw new PluginMisconfigurationException("File URL is empty, please fill this field");
 
-        var fileName = input.FileName ?? input.File.Name;
-        client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
-        client.Disconnect();
+            var restClient = new RestClient(input.File.Url);
+            using var stream = restClient.DownloadStream(new RestRequest());
+
+            var fileName = input.FileName ?? input.File.Name;
+            client.UploadFile(stream, $"{input.Path.TrimEnd('/')}/{fileName}");
+            return true;
+        });
     }
 
     [Action("Delete file", Description = "Delete file by path")]
     public void DeleteFile([ActionParameter] DeleteFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        client.DeleteFile(input.FilePath);
-        client.Disconnect();
+        UseClient(client => {
+            client.DeleteFile(input.FilePath);
+            return true;
+        });
     }
 
     [Action("Create directory", Description = "Create new directory by path")]
     public void CreateDirectory([ActionParameter] CreateDirectoryRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        try
+        UseClient(client =>
         {
             client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
-        }
-        catch (Exception) { }
-        client.Disconnect();
+            return true;
+        });
     }
 
     [Action("Delete directory", Description = "Delete directory by path")]
     public void DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        client.DeleteDirectory(input.Path);
-        client.Disconnect();
+        UseClient(client =>
+        {
+            client.DeleteDirectory(input.Path);
+            return true;
+        });
     }
 }

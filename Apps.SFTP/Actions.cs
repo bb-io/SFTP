@@ -40,9 +40,11 @@ public class Actions : SFTPInvocable
     [Action("Rename file", Description = "Rename a path from old to new")]
     public void RenameFile([ActionParameter] RenameFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        client.RenameFile(input.OldPath, input.NewPath);
-        client.Disconnect();
+        UseClient(client =>
+        {
+            client.RenameFile(input.OldPath, input.NewPath);
+            return true;
+        });
     }
 
     [Action("Download file", Description = "Download file by path")]

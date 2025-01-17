@@ -50,18 +50,20 @@ public class Actions : SFTPInvocable
     [Action("Download file", Description = "Download file by path")]
     public async Task<DownloadFileResponse> DownloadFile([ActionParameter] DownloadFileRequest input)
     {
-        using var client = new BlackbirdSftpClient(Creds);
-        using var stream = new MemoryStream();
-        
-        client.DownloadFile(input.Path, stream);
+        return await UseClientAsync(async client =>
+        {
+            using var stream = new MemoryStream();
 
-        MimeTypes.FallbackMimeType = MediaTypeNames.Application.Octet;
-        var mimeType = MimeTypes.GetMimeType(input.Path);
+            client.DownloadFile(input.Path,stream);
 
-        var file = await _fileManagementClient.UploadAsync(new MemoryStream(stream.GetBuffer()), mimeType, Path.GetFileName(input.Path));
-        client.Disconnect();
-        return new() { File = file };
-    }
+            var mimeType = MimeTypes.GetMimeType(input.Path);
+
+            var file = await _fileManagementClient.UploadAsync(
+                new MemoryStream(stream.GetBuffer()), mimeType,Path.GetFileName(input.Path));
+
+            return new DownloadFileResponse { File=file };
+        });
+        }
 
     [Action("Upload file", Description = "Upload file by path")]
     public async void UploadFile([ActionParameter] UploadFileRequest input)

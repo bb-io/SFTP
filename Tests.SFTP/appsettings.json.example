@@ -1,0 +1,9 @@
+{
+    "ConnectionDefinition": {
+        "host": "",
+        "login": "",
+        "password": "",
+        "port": ""
+    },
+    "TestFolder": "TestFiles"
+}

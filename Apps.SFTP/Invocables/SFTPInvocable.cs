@@ -28,6 +28,14 @@ namespace Apps.SFTP.Invocables
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
             }
+            catch (ArgumentException ex)
+            {
+                throw new PluginApplicationException($"Invalid argument: {ex.Message}", ex);
+            }
+            catch (ObjectDisposedException ex)
+            {
+                throw new PluginApplicationException($"Object disposed error: {ex.Message}", ex);
+            }
             finally
             {
                 if (client.IsConnected)
@@ -47,6 +55,14 @@ namespace Apps.SFTP.Invocables
             catch (SshException ex)
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new PluginApplicationException($"Invalid argument: {ex.Message}", ex);
+            }      
+            catch (ObjectDisposedException ex)
+            {
+                throw new PluginApplicationException($"Object disposed error: {ex.Message}", ex);
             }
             finally
             {

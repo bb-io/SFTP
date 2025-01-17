@@ -27,7 +27,7 @@ namespace Apps.SFTP.Invocables
             catch (SshException ex)
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
-            }  
+            }
         }
 
 

@@ -12,6 +12,7 @@ namespace Tests.SFTP
             var validator = new ConnectionValidator();
 
             var result = await validator.ValidateConnection(Creds, CancellationToken.None);
+            Console.WriteLine(result.Message);
             Assert.IsTrue(result.IsValid);
         }
 
@@ -20,9 +21,10 @@ namespace Tests.SFTP
         {
             var validator = new ConnectionValidator();
 
-            var newCreds = Creds.Select(x => new AuthenticationCredentialsProvider(AuthenticationCredentialsRequestLocation.None,x.KeyName, x.Value + "_incorrect"));
+            var newCreds = Creds.Select(x => new AuthenticationCredentialsProvider(x.KeyName, x.Value + "_incorrect"));
             var result = await validator.ValidateConnection(newCreds, CancellationToken.None);
-            Assert.IsFalse(result.IsValid);
+            Console.WriteLine(result.Message);
+            Assert.IsFalse(result.IsValid);            
         }
     }
 }

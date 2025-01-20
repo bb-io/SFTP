@@ -7,75 +7,157 @@ using Apps.SFTP;
 using Apps.SFTP.Connections;
 using Apps.SFTP.Models.Requests;
 using Blackbird.Applications.Sdk.Common.Files;
+using Microsoft.Extensions.Options;
+using Tests.SFTP.Base;
 
 namespace Tests.SFTP
 {
     [TestClass]
-    public class ActionsTests :TestBase
+    public class ActionsTests : TestBase
     {
+        public const string fileName = "Translate.txt";
+        public const string alternativeFileName = "Translate_renamed.txt";
+        public const string directory = "test";
 
-        [TestMethod]
-        public async Task CreateDirectory_IsOk()
+        public const string sizeTestFilename = "test.json";
+
+        private bool DoesFileExist(string directory, string fileName)
         {
-            var client = new Actions(InvocationContext, FileManager);
-            var input = new CreateDirectoryRequest
-            {
-                Path="/newpath",
-                DirectoryName="directory1"
-            };
-
-            client.CreateDirectory(input);
+            var actions = new Actions(InvocationContext, FileManager);
+            var directoryResponse = actions.ListDirectory(new ListDirectoryRequest { Path = directory });
+            return directoryResponse.DirectoriesItems.Any(x => x.Name == fileName);
         }
 
         [TestMethod]
-        public async Task DeleteDirectory_IsOk()
+        public void CreateDirectory_IsOk()
         {
-            var client = new Actions(InvocationContext, FileManager);
-            var input = new DeleteDirectoryRequest { Path= "/newpath/directory1" };
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new CreateDirectoryRequest
+            {
+                DirectoryName=directory
+            };
 
-            client.DeleteDirectory(input);
+            actions.CreateDirectory(input);
+        }
+
+        [TestMethod]
+        public void DeleteDirectory_IsOk()
+        {
+            CreateDirectory_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new DeleteDirectoryRequest { Path = directory };
+
+            actions.DeleteDirectory(input);
         }
 
         [TestMethod]
         public async Task UploadFile_IsOk()
         {
-            var client = new Actions(InvocationContext, FileManager);
-            var fileName = "Translate.txt";
+            var actions = new Actions(InvocationContext, FileManager);
             var input = new UploadFileRequest
             {
                 File = new FileReference
                 {
                     Name = fileName
                 },
-                Path = "/upload",
-                FileName = fileName
+                Path = directory,
             };
-            client.UploadFile(input);
+            await actions.UploadFile(input);
+            Assert.IsTrue(DoesFileExist(directory, fileName));
+        }
+
+        [TestMethod]
+        public async Task DownloadFile_IsOk()
+        {
+            await UploadFile_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+            var response = await actions.DownloadFile(new DownloadFileRequest { Path = directory + '/' + fileName});
+            Assert.IsTrue(response.File.Name == fileName);
+        }
+
+        [TestMethod]
+        public async Task DownloadFile_Throws_for_unknown_file()
+        {
+            var actions = new Actions(InvocationContext, FileManager);
+            await Throws.MisconfigurationException(() => actions.DownloadFile(new DownloadFileRequest { Path = directory + '/' + "does_not_exist.txt" }));
         }
 
         [TestMethod]
         public async Task RenameFile_IsOk()
         {
-            var client = new Actions(InvocationContext, FileManager);
-            var input = new RenameFileRequest { NewPath = "/newpath/some223.txt", OldPath = "/newpath/some.txt" };
-            client.RenameFile(input);
+            await UploadFile_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new RenameFileRequest { NewPath = directory + '/' + alternativeFileName, OldPath = directory + '/' + fileName };
+            actions.RenameFile(input);
+
+            Assert.IsTrue(DoesFileExist(directory, alternativeFileName));
+        }
+
+        [TestMethod]
+        public async Task RenameFile_Throws_for_unknown_file()
+        {
+            await UploadFile_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new RenameFileRequest { NewPath = directory + '/' + alternativeFileName, OldPath = directory + '/' + "does_not_exist.txt" };
+
+            Throws.MisconfigurationException(() => actions.RenameFile(input));
         }
 
         [TestMethod]
         public async Task DeleteFile_IsOk()
         {
-            var client = new Actions(InvocationContext, FileManager);
-            var input = new DeleteFileRequest { FilePath = "/newpath/some223.txt" };
+            await UploadFile_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new DeleteFileRequest { FilePath = directory + '/' + fileName };
 
-            client.DeleteFile(input);
+            actions.DeleteFile(input);
+            Assert.IsFalse(DoesFileExist(directory, alternativeFileName));
+        }
+
+        [TestMethod]
+        public async Task DeleteFile_Throws_for_unknown_file()
+        {
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new DeleteFileRequest { FilePath = directory + '/' + "does_not_exists.txt" };
+
+            Throws.MisconfigurationException(() => actions.DeleteFile(input));
         }
 
         [TestMethod]
         public async Task ListDirectoryFiles_IsOk()
         {
-            var client = new Actions(InvocationContext, FileManager);
-            var input = new ListDirectoryRequest { Path = "/newpath" };
-            client.ListDirectory(input);
+            await UploadFile_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new ListDirectoryRequest { Path = directory };
+            var response = actions.ListDirectory(input);
+
+            Assert.IsTrue(response.DirectoriesItems.Count() > 0);
+
+            foreach(var item in response.DirectoriesItems)
+            {
+                Console.WriteLine(item.Name);
+            }
+        }
+
+        [TestMethod]
+        public async Task Uploaded_and_downloaded_file_are_equal_size()
+        {
+            var actions = new Actions(InvocationContext, FileManager);
+            var input = new UploadFileRequest
+            {
+                File = new FileReference
+                {
+                    Name = sizeTestFilename
+                },
+                Path = directory,
+            };
+            await actions.UploadFile(input);
+            await actions.DownloadFile(new DownloadFileRequest { Path = directory + '/' + sizeTestFilename });
+
+            var uploadFileSize = GetInputFileSize(sizeTestFilename);
+            var downloadFileSize = GetOutputFileSize(sizeTestFilename);
+
+            Assert.AreEqual(uploadFileSize, downloadFileSize);
         }
     }
 }

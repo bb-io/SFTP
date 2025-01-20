@@ -19,55 +19,51 @@ namespace Apps.SFTP.Invocables
         //For sync methods
         protected T UseClient<T>(Func<BlackbirdSftpClient, T> action)
         {
-            using var client = new BlackbirdSftpClient(Creds);
             try
             {
-                return action(client);
+                using var client = new BlackbirdSftpClient(Creds);
+                var result = action(client);
+                if (client.IsConnected)
+                    client.Disconnect();
+                return result;
+            }
+            catch (SshAuthenticationException ex)
+            {
+                throw new PluginMisconfigurationException($"The server denied access to the current connection credentials. Please update the connection.", ex);
+            }
+            catch (SftpPathNotFoundException ex)
+            {
+                throw new PluginMisconfigurationException($"The provided file or path does not exist on the server. Please make sure the path is valid.", ex);
             }
             catch (SshException ex)
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new PluginApplicationException($"Invalid argument: {ex.Message}", ex);
-            }
-            catch (ObjectDisposedException ex)
-            {
-                throw new PluginApplicationException($"Object disposed error: {ex.Message}", ex);
-            }
-            finally
-            {
-                if (client.IsConnected)
-                    client.Disconnect();
             }
         }
 
 
         //For async methods
         protected async Task<T> UseClientAsync<T>(Func<BlackbirdSftpClient, Task<T>> action)
-        {
-            using var client = new BlackbirdSftpClient(Creds);
+        {            
             try
             {
-                return await action(client);
+                using var client = new BlackbirdSftpClient(Creds);
+                var result = await action(client);
+                if (client.IsConnected)
+                    client.Disconnect();
+                return result;
+            }
+            catch (SshAuthenticationException ex)
+            {
+                throw new PluginMisconfigurationException($"The server denied access to the current connection credentials. Please update the connection.", ex);
+            }
+            catch (SftpPathNotFoundException ex)
+            {
+                throw new PluginMisconfigurationException($"The provided file or path does not exist on the server. Please make sure the path is valid.", ex);
             }
             catch (SshException ex)
             {
                 throw new PluginApplicationException($"SFTP error: {ex.Message}", ex);
-            }
-            catch (ArgumentException ex)
-            {
-                throw new PluginApplicationException($"Invalid argument: {ex.Message}", ex);
-            }      
-            catch (ObjectDisposedException ex)
-            {
-                throw new PluginApplicationException($"Object disposed error: {ex.Message}", ex);
-            }
-            finally
-            {
-                if (client.IsConnected)
-                    client.Disconnect();
             }
         }
     }

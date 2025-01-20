@@ -10,5 +10,6 @@ public class UploadFileRequest
     [Display("File name")]
     public string? FileName { get; set; }
 
-    public string Path { get; set; }
+    [Display("Directory path")]
+    public string? Path { get; set; }
 }

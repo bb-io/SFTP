@@ -8,19 +8,37 @@ public class ConnectionValidator : IConnectionValidator
     public async ValueTask<ConnectionValidationResponse> ValidateConnection(
         IEnumerable<AuthenticationCredentialsProvider> authProviders, CancellationToken cancellationToken)
     {
-        using var client = new BlackbirdSftpClient(authProviders);
+        try
+        {
+            using var client = new BlackbirdSftpClient(authProviders);
 
-        if (client.IsConnected)
+            if (client.IsConnected)
+                return new ConnectionValidationResponse
+                {
+                    IsValid = true
+                };
+
             return new ConnectionValidationResponse
             {
-                IsValid = true
+                IsValid = false,
+                Message = "Failed to connect. Please check your connection parameters."
             };
-        
-        return new ConnectionValidationResponse
+        } catch(FormatException ex)
         {
-            IsValid = true,
-            Message = "Failed to connect. Please check your connection parameters."
-        };
+            return new ConnectionValidationResponse()
+            {
+                IsValid = false,
+                Message = ex.Message.Split("string ").Last(),
+            };
+        } catch(Exception ex)
+        {
+            return new ConnectionValidationResponse()
+            {
+                IsValid = false,
+                Message = ex.Message,
+            };
+        }
+        
 
     }
 }

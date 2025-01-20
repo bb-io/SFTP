@@ -5,18 +5,18 @@ namespace Tests.SFTP
 {
     public class FileManager : IFileManagementClient
     {
-        private readonly string inputFolder;
-        private readonly string outputFolder;
+        public readonly string inputFolder;
+        public readonly string outputFolder;
 
-        public FileManager()
+        public FileManager(string folderLocation)
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var projectDirectory = Directory.GetParent(baseDirectory).Parent.Parent.Parent.FullName;
 
 
             var testFilesPath = Path.Combine(projectDirectory, "TestFiles");
-            inputFolder = Path.Combine(testFilesPath, "Input");
-            outputFolder = Path.Combine(testFilesPath, "Output");
+            inputFolder = Path.Combine(folderLocation, "Input");
+            outputFolder = Path.Combine(folderLocation, "Output");
 
             Directory.CreateDirectory(inputFolder);
             Directory.CreateDirectory(outputFolder);

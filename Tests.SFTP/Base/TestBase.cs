@@ -28,7 +28,23 @@ namespace Tests.SFTP
                 AuthenticationCredentialsProviders = Creds,
             };
 
-            FileManager = new FileManager();
+            FileManager = new FileManager(folderLocation);
+        }
+
+        public int GetInputFileSize(string fileName)
+        {
+            var path = Path.Combine(FileManager.inputFolder, fileName);
+            Assert.IsTrue(File.Exists(path), $"File not found at: {path}");
+            var bytes = File.ReadAllBytes(path);
+            return bytes.Length;
+        }
+
+        public int GetOutputFileSize(string fileName)
+        {
+            var path = Path.Combine(FileManager.outputFolder, fileName);
+            Assert.IsTrue(File.Exists(path), $"File not found at: {path}");
+            var bytes = File.ReadAllBytes(path);
+            return bytes.Length;
         }
     }
 }

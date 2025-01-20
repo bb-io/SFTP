@@ -11,7 +11,6 @@ public class ConnectionDefinition : IConnectionDefinition
         {
             Name = "SFTP information",
             AuthenticationType = ConnectionAuthenticationType.Undefined,
-            ConnectionUsage = ConnectionUsage.Actions,
             ConnectionProperties = new List<ConnectionProperty>()
             {
                 new("host"){ DisplayName = "Host" },
@@ -26,28 +25,24 @@ public class ConnectionDefinition : IConnectionDefinition
     {
         var host = values.First(v => v.Key == "host");
         yield return new AuthenticationCredentialsProvider(
-            AuthenticationCredentialsRequestLocation.None,
             host.Key,
             host.Value
         );
 
         var port = values.First(v => v.Key == "port");
         yield return new AuthenticationCredentialsProvider(
-            AuthenticationCredentialsRequestLocation.None,
             port.Key,
             port.Value
         );
 
         var login = values.First(v => v.Key == "login");
         yield return new AuthenticationCredentialsProvider(
-            AuthenticationCredentialsRequestLocation.None,
             login.Key,
             login.Value
         );
 
         var password = values.First(v => v.Key == "password");
         yield return new AuthenticationCredentialsProvider(
-            AuthenticationCredentialsRequestLocation.None,
             password.Key,
             password.Value
         );

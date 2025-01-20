@@ -59,34 +59,31 @@ public class Actions : SFTPInvocable
         {
             using var stream = new MemoryStream();
 
-            client.DownloadFile(input.Path,stream);
+            client.DownloadFile(input.Path, stream);
+            stream.Position = 0;
 
             var mimeType = MimeTypes.GetMimeType(input.Path);
 
-            var file = await _fileManagementClient.UploadAsync(
-                new MemoryStream(stream.GetBuffer()), mimeType,Path.GetFileName(input.Path));
+            var file = await _fileManagementClient.UploadAsync(stream, mimeType, Path.GetFileName(input.Path));
 
             return new DownloadFileResponse { File=file };
         });
     }
 
     [Action("Upload file", Description = "Upload file by path")]
-    public async void UploadFile([ActionParameter] UploadFileRequest input)
+    public async Task UploadFile([ActionParameter] UploadFileRequest input)
     {
         await UseClientAsync(async client =>
         {
-            if (input.File.Url == null)
-                throw new PluginMisconfigurationException("File URL is empty, please fill this field");
+            var fileStream = await _fileManagementClient.DownloadAsync(input.File);
 
-            var restClient = new RestClient(input.File.Url);
-            using var responseStream = restClient.DownloadStream(new RestRequest());
-            using var memoryStream = new MemoryStream();
-
-            await responseStream.CopyToAsync(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
+            var memoryStream = new MemoryStream();
+            await fileStream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
 
             var fileName = input.FileName ?? input.File.Name;
-            client.UploadFile(memoryStream, $"{input.Path.TrimEnd('/')}/{fileName}");
+            var path = input.Path ?? "/";
+            client.UploadFile(memoryStream, $"{path.TrimEnd('/')}/{fileName}");
             return true;
         });
     }
@@ -105,7 +102,8 @@ public class Actions : SFTPInvocable
     {
         UseClient(client =>
         {
-            client.CreateDirectory($"{input.Path.TrimEnd('/')}/{input.DirectoryName}");
+            var path = input.Path ?? "/";
+            client.CreateDirectory($"{path.TrimEnd('/')}/{input.DirectoryName}");
             return true;
         });
     }

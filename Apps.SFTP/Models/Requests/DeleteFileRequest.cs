@@ -4,6 +4,6 @@ namespace Apps.SFTP.Models.Requests;
 
 public class DeleteFileRequest
 {
-    [Display("Path")]
+    [Display("Full path")]
     public string FilePath { get; set; }
 }

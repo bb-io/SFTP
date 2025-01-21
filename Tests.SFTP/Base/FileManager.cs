@@ -45,20 +45,5 @@ namespace Tests.SFTP
             return Task.FromResult(new FileReference() { Name = fileName, ContentType=contentType });
         }
 
-        public async Task<FileReference> UploadTestFileAsync(string fileName, string contentType = "text/plain")
-        {
-            var testFilePath = Path.Combine(inputFolder, fileName);
-            Assert.IsTrue(File.Exists(testFilePath), $"Test file not found at: {testFilePath}");
-
-            using var fileStream = new FileStream(testFilePath, FileMode.Open, FileAccess.Read);           
-
-            var fileReference = new FileReference
-            {
-                Name = fileName,
-                ContentType = contentType
-            };
-
-            return fileReference;
-        }
     }
 }

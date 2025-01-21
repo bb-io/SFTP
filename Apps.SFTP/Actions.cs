@@ -66,7 +66,7 @@ public class Actions : SFTPInvocable
 
             var file = await _fileManagementClient.UploadAsync(stream, mimeType, Path.GetFileName(input.Path));
 
-            return new DownloadFileResponse { File=file };
+            return new DownloadFileResponse { File = file };
         });
     }
 
@@ -75,11 +75,20 @@ public class Actions : SFTPInvocable
     {
         await UseClientAsync(async client =>
         {
-            var fileStream = await _fileManagementClient.DownloadAsync(input.File);
+            using var memoryStream = new MemoryStream();
 
-            var memoryStream = new MemoryStream();
-            await fileStream.CopyToAsync(memoryStream);
-            memoryStream.Position = 0;
+            if (input.File.Url == null)
+            {
+                var fileStream = await _fileManagementClient.DownloadAsync(input.File);
+                await fileStream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+            } else
+            {
+                var restClient = new RestClient(input.File.Url);
+                using var responseStream = restClient.DownloadStream(new RestRequest());
+                await responseStream.CopyToAsync(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+            }
 
             var fileName = input.FileName ?? input.File.Name;
             var path = input.Path ?? "/";

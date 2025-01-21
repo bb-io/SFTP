@@ -115,7 +115,7 @@ namespace Tests.SFTP
         }
 
         [TestMethod]
-        public async Task DeleteFile_Throws_for_unknown_file()
+        public void DeleteFile_Throws_for_unknown_file()
         {
             var actions = new Actions(InvocationContext, FileManager);
             var input = new DeleteFileRequest { FilePath = directory + '/' + "does_not_exists.txt" };

@@ -34,7 +34,7 @@ namespace Tests.SFTP
             var actions = new Actions(InvocationContext, FileManager);
             var input = new CreateDirectoryRequest
             {
-                DirectoryName=directory
+                DirectoryName= "/<!&@9fe137c94360b321&>"
             };
 
             actions.CreateDirectory(input);

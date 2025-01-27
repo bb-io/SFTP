@@ -29,11 +29,11 @@ namespace Apps.SFTP.Invocables
             }
             catch (SshAuthenticationException ex)
             {
-                throw new PluginMisconfigurationException($"The server denied access to the current connection credentials. Please update the connection.");
+                throw new PluginMisconfigurationException($"Authentication failed: {ex.Message}. The server denied access to the current connection credentials. Please verify and update your credentials.");
             }
             catch (SftpPathNotFoundException ex)
             {
-                throw new PluginMisconfigurationException($"The provided file or path does not exist on the server. Please make sure the path is valid.");
+                throw new PluginMisconfigurationException($"File or path not found: {ex.Message}. The specified file or directory does not exist on the server. Please check the provided path.");
             }
             catch (SshException ex)
             {
@@ -55,11 +55,11 @@ namespace Apps.SFTP.Invocables
             }
             catch (SshAuthenticationException ex)
             {
-                throw new PluginMisconfigurationException($"The server denied access to the current connection credentials. Please update the connection.");
+                throw new PluginMisconfigurationException($"Authentication failed: {ex.Message}. The server denied access to the current connection credentials. Please verify and update your credentials.");
             }
             catch (SftpPathNotFoundException ex)
             {
-                throw new PluginMisconfigurationException($"The provided file or path does not exist on the server. Please make sure the path is valid.");
+                throw new PluginMisconfigurationException($"File or path not found: {ex.Message}. The specified file or directory does not exist on the server. Please check the provided path.");
             }
             catch (SshException ex)
             {

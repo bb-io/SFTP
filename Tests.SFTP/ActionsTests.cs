@@ -139,6 +139,32 @@ namespace Tests.SFTP
             }
         }
 
+
+        [TestMethod]
+        public async Task SearchFiles_IsOk()
+        {
+            await UploadFile_IsOk();
+            var actions = new Actions(InvocationContext, FileManager);
+
+            var updatedFrom = DateTime.Now.AddMinutes(-1);
+            var updatedTo = DateTime.Now.AddMinutes(1);
+            var input = new ListDirectoryRequest
+            {
+                Path = directory,
+                UpdatedFrom = updatedFrom,
+                UpdatedTo = updatedTo
+            };
+
+            var response = actions.ListDirectory(input);
+
+            Assert.IsTrue(response.DirectoriesItems.Any());
+
+            foreach (var item in response.DirectoriesItems)
+            {
+                Console.WriteLine(item.Name);
+            }
+        }
+
         [TestMethod]
         public async Task Uploaded_and_downloaded_file_are_equal_size()
         {

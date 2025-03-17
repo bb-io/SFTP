@@ -22,7 +22,7 @@ public class Actions : SFTPInvocable
         _fileManagementClient = fileManagementClient;
     }
 
-    [Action("Search directory files", Description = "List all files in specified directory")]
+    [Action("Search files", Description = "Search all files in specified directory")]
     public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
         return UseClient(client =>

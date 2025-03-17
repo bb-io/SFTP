@@ -22,13 +22,25 @@ public class Actions : SFTPInvocable
         _fileManagementClient = fileManagementClient;
     }
 
-    [Action("List directory files", Description = "List all files in specified directory")]
+    [Action("Search files", Description = "Search all files in specified directory")]
     public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
         return UseClient(client =>
         {
-            var files = client.ListDirectory(input.Path)
-                .Where(x => x.IsRegularFile)
+            var filesQuery = client.ListDirectory(input.Path)
+                .Where(x => x.IsRegularFile);
+
+            if (input.UpdatedFrom.HasValue)
+            {
+                filesQuery = filesQuery.Where(x => x.LastWriteTime >= input.UpdatedFrom.Value);
+            }
+
+            if (input.UpdatedTo.HasValue)
+            {
+                filesQuery = filesQuery.Where(x => x.LastWriteTime <= input.UpdatedTo.Value);
+            }
+
+            var files = filesQuery
                 .Select(i => new DirectoryItemDto()
                 {
                     Name = i.Name,

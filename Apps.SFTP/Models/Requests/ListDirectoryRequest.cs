@@ -7,4 +7,10 @@ public class ListDirectoryRequest
 {
     [Display("Directory path")]
     public string Path { get; set; }
+
+    [Display("Updated from")]
+    public DateTime? UpdatedFrom { get; set; }
+
+    [Display("Updated to")]
+    public DateTime? UpdatedTo { get; set; }
 }

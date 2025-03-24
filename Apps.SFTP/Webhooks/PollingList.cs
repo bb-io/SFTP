@@ -3,6 +3,7 @@ using Apps.SFTP.Invocables;
 using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Webhooks.Payload;
 using Apps.SFTP.Webhooks.Polling.Memory;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.Sdk.Common.Polling;
 using Renci.SshNet.Sftp;
@@ -124,7 +125,17 @@ namespace Apps.SFTP.Webhooks
         private List<ISftpFile> ListDirectoryFiles(BlackbirdSftpClient sftpClient, string folderPath, bool includeSubfolder)
         {
             var filesList = new List<ISftpFile>();
-            var items = sftpClient.ListDirectory(folderPath).Where(x => x.Name != "." && x.Name != "..").ToList();
+            var items = new List<ISftpFile>();
+            try
+            {
+                items = sftpClient.ListDirectory(folderPath).Where(x => x.Name != "." && x.Name != "..").ToList();
+            }
+            catch (Exception ex)
+            {
+
+                throw new PluginApplicationException(ex.Message);
+            }
+
             foreach (var entry in items)
             {
                 if (entry.IsDirectory && includeSubfolder)
@@ -142,10 +153,19 @@ namespace Apps.SFTP.Webhooks
         private List<ISftpFile> ListDirectoryFolders(BlackbirdSftpClient sftpClient, string folderPath, bool includeSubfolder)
         {
             var folderList = new List<ISftpFile>();
-            var items = sftpClient.ListDirectory(folderPath)
+            var items = new List<ISftpFile>();
+            try
+            {
+                 items =
+                sftpClient.ListDirectory(folderPath)
                 .Where(x => x.Name != "." && x.Name != "..")
                 .ToList();
-        
+            }
+            catch (Exception ex)
+            {
+                throw new PluginApplicationException(ex.Message);
+            }
+
             foreach (var entry in items)
             {
                 if (entry.IsDirectory)

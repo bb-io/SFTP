@@ -1,7 +1,9 @@
 ﻿using Blackbird.Applications.Sdk.Common.Authentication;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Renci.SshNet;
-using static System.Net.Mime.MediaTypeNames;
+using Renci.SshNet.Common;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Apps.SFTP;
 
@@ -25,7 +27,27 @@ public class BlackbirdSftpClient : SftpClient
 
     public BlackbirdSftpClient(IEnumerable<AuthenticationCredentialsProvider> authenticationCredentialsProviders) : base(GetConnectionInfo(authenticationCredentialsProviders))
     {
-        this.BufferSize = 32 * 1024 * 12;
-        this.Connect();
+        try
+        {
+            this.BufferSize = 32 * 1024 * 12;
+            this.Connect();
+        }
+        catch (SshAuthenticationException ex)
+        {
+            throw new PluginMisconfigurationException($"Authentication failed: {ex.Message}. The server denied access to the current connection credentials. Please verify and update your credentials.");
+        }
+        catch (SftpPathNotFoundException ex)
+        {
+            throw new PluginMisconfigurationException($"File or path not found: {ex.Message}. The specified file or directory does not exist on the server. Please check the provided path.");
+        }
+        catch (SshException ex)
+        {
+            throw new PluginApplicationException($"{ex.Message} - Make sure the target path is correct.");
+        }
+        catch (Exception ex)
+        {
+            throw new PluginApplicationException(ex.Message);
+        }
+
     }
 }

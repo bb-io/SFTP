@@ -3,6 +3,7 @@ using Apps.SFTP.Invocables;
 using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Webhooks.Payload;
 using Apps.SFTP.Webhooks.Polling.Memory;
+using Blackbird.Applications.Sdk.Common.Connections;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.Sdk.Common.Polling;
@@ -18,76 +19,90 @@ namespace Apps.SFTP.Webhooks
             PollingEventRequest<SftpDirectoryMemory> request,
             [PollingEventParameter] ParentFolderInput parentFolder)
         {
-            using var client = new BlackbirdSftpClient(Creds);
-            var directories = ListDirectoryFolders(client, parentFolder.Folder ?? "/",
-                parentFolder.IncludeSubfolders ?? false);
+            try
+            {
+                using var client = new BlackbirdSftpClient(Creds);
+                var directories = ListDirectoryFolders(client, parentFolder.Folder ?? "/",
+                    parentFolder.IncludeSubfolders ?? false);
 
-            var directoryState = directories.Select(x => x.FullName).ToList();
-            if (request.Memory == null)
-            {            
-                return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
+                var directoryState = directories.Select(x => x.FullName).ToList();
+                if (request.Memory == null)
                 {
-                    FlyBird = false,
-                    Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
-                });
-            }
-            
-            var newItems = directoryState.Except(request.Memory.DirectoriesState).ToList();
-            if (newItems.Count == 0)
-            {
-                return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
-                {
-                    FlyBird = false,
-                    Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
-                });
-            }
-            
-            return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
-            {
-                FlyBird = true,
-                Memory = new SftpDirectoryMemory { DirectoriesState = directoryState },
-                Result = new ListDirectoryResponse
-                {
-                    DirectoriesItems = directories.Where(x => newItems.Contains(x.FullName)).Select(x => new DirectoryItemDto
+                    return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
                     {
-                        Name = x.Name,
-                        Path = x.FullName
-                    })
+                        FlyBird = false,
+                        Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
+                    });
                 }
-            });
+
+                var newItems = directoryState.Except(request.Memory.DirectoriesState).ToList();
+                if (newItems.Count == 0)
+                {
+                    return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
+                    {
+                        FlyBird = false,
+                        Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
+                    });
+                }
+
+                return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
+                {
+                    FlyBird = true,
+                    Memory = new SftpDirectoryMemory { DirectoriesState = directoryState },
+                    Result = new ListDirectoryResponse
+                    {
+                        DirectoriesItems = directories.Where(x => newItems.Contains(x.FullName)).Select(x => new DirectoryItemDto
+                        {
+                            Name = x.Name,
+                            Path = x.FullName
+                        })
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new PluginApplicationException(ex.Message);
+            }
         }
-        
+
         [PollingEvent("On files created or updated", "On files created or updated")]
         public async Task<PollingEventResponse<SFTPMemory, ChangedFilesResponse>> OnFilesAddedOrUpdated(
             PollingEventRequest<SFTPMemory> request,
             [PollingEventParameter] ParentFolderInput parentFolder
             )
         {
-            using var client = new BlackbirdSftpClient(Creds);
-            var filesInfo = ListDirectoryFiles(client, parentFolder.Folder ?? "/", parentFolder.IncludeSubfolders ?? true);
-            var newFilesState = filesInfo.Select(x => $"{x.FullName}|{x.LastWriteTime}").ToList();
-            if (request.Memory == null)
-            {            
+            try
+            {
+                using var client = new BlackbirdSftpClient(Creds);
+                var filesInfo = ListDirectoryFiles(client, parentFolder.Folder ?? "/", parentFolder.IncludeSubfolders ?? true);
+                var newFilesState = filesInfo.Select(x => $"{x.FullName}|{x.LastWriteTime}").ToList();
+                if (request.Memory == null)
+                {
+                    return new()
+                    {
+                        FlyBird = false,
+                        Memory = new SFTPMemory() { FilesState = newFilesState }
+                    };
+                }
+                var changedItems = newFilesState.Except(request.Memory.FilesState).ToList();
+                if (changedItems.Count == 0)
+                    return new()
+                    {
+                        FlyBird = false,
+                        Memory = new SFTPMemory() { FilesState = newFilesState }
+                    };
+                var changedFilesPath = changedItems.Select(x => x.Split('|').First()).ToList();
                 return new()
                 {
-                    FlyBird = false,
-                    Memory = new SFTPMemory() { FilesState = newFilesState }
+                    FlyBird = true,
+                    Memory = new SFTPMemory() { FilesState = newFilesState },
+                    Result = new ChangedFilesResponse() { Files = filesInfo.Where(x => changedFilesPath.Contains(x.FullName)).Select(x => new DirectoryItemDto() { Name = x.Name, Path = x.FullName }).ToList() }
                 };
             }
-            var changedItems = newFilesState.Except(request.Memory.FilesState).ToList();
-            if (changedItems.Count == 0)
-                return new()
-                {
-                    FlyBird = false,
-                    Memory = new SFTPMemory() { FilesState = newFilesState }
-                };
-            var changedFilesPath = changedItems.Select(x => x.Split('|').First()).ToList();
-            return new()
+            catch (Exception ex)
             {
-                FlyBird = true,
-                Memory = new SFTPMemory() { FilesState = newFilesState },
-                Result = new ChangedFilesResponse() { Files = filesInfo.Where(x => changedFilesPath.Contains(x.FullName)).Select(x => new DirectoryItemDto() { Name = x.Name, Path = x.FullName }).ToList() }
-            };
+                throw new PluginApplicationException(ex.Message);
+            }
         }
 
         [PollingEvent("On files deleted", "On files deleted")]
@@ -96,30 +111,37 @@ namespace Apps.SFTP.Webhooks
             [PollingEventParameter] ParentFolderInput parentFolder
             )
         {
-            using var client = new BlackbirdSftpClient(Creds);
-            var filesInfo = ListDirectoryFiles(client, parentFolder.Folder ?? "/", parentFolder.IncludeSubfolders ?? true);
-            var newFilesState = filesInfo.Select(x => $"{x.FullName}").ToList();
-            if (request.Memory == null)
+            try
             {
+                using var client = new BlackbirdSftpClient(Creds);
+                var filesInfo = ListDirectoryFiles(client, parentFolder.Folder ?? "/", parentFolder.IncludeSubfolders ?? true);
+                var newFilesState = filesInfo.Select(x => $"{x.FullName}").ToList();
+                if (request.Memory == null)
+                {
+                    return new()
+                    {
+                        FlyBird = false,
+                        Memory = new SFTPMemory() { FilesState = newFilesState }
+                    };
+                }
+                var deletedItems = request.Memory.FilesState.Except(newFilesState).ToList();
+                if (deletedItems.Count == 0)
+                    return new()
+                    {
+                        FlyBird = false,
+                        Memory = new SFTPMemory() { FilesState = newFilesState }
+                    };
                 return new()
                 {
-                    FlyBird = false,
-                    Memory = new SFTPMemory() { FilesState = newFilesState }
+                    FlyBird = true,
+                    Memory = new SFTPMemory() { FilesState = newFilesState },
+                    Result = new ChangedFilesResponse() { Files = deletedItems.Select(x => new DirectoryItemDto() { Name = Path.GetFileName(x), Path = x }).ToList() }
                 };
             }
-            var deletedItems = request.Memory.FilesState.Except(newFilesState).ToList();
-            if (deletedItems.Count == 0)
-                return new()
-                {
-                    FlyBird = false,
-                    Memory = new SFTPMemory() { FilesState = newFilesState }
-                };
-            return new()
+            catch (Exception ex)
             {
-                FlyBird = true,
-                Memory = new SFTPMemory() { FilesState = newFilesState },
-                Result = new ChangedFilesResponse() { Files = deletedItems.Select(x => new DirectoryItemDto() { Name = Path.GetFileName(x), Path = x }).ToList() }
-            };
+                throw new PluginApplicationException(ex.Message);
+            }
         }
 
         private List<ISftpFile> ListDirectoryFiles(BlackbirdSftpClient sftpClient, string folderPath, bool includeSubfolder)

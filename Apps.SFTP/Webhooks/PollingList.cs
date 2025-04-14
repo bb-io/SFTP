@@ -150,7 +150,7 @@ namespace Apps.SFTP.Webhooks
             var items = new List<ISftpFile>();
             try
             {
-                items = sftpClient.ListDirectory(folderPath).Where(x => x.Name != "." && x.Name != "..").ToList();
+                items = UseClient((sftpClient) => sftpClient.ListDirectory(folderPath).Where(x => x.Name != "." && x.Name != "..").ToList());
             }
             catch (Exception ex)
             {
@@ -179,9 +179,9 @@ namespace Apps.SFTP.Webhooks
             try
             {
                  items =
-                sftpClient.ListDirectory(folderPath)
+                UseClient((sftpClient) => sftpClient.ListDirectory(folderPath)
                 .Where(x => x.Name != "." && x.Name != "..")
-                .ToList();
+                .ToList());
             }
             catch (Exception ex)
             {

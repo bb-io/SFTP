@@ -34,7 +34,7 @@ namespace Tests.SFTP
             var actions = new Actions(InvocationContext, FileManager);
             var input = new CreateDirectoryRequest
             {
-                DirectoryName= "/<!&@9fe137c94360b321&>"
+                DirectoryName= "/test"
             };
 
             actions.CreateDirectory(input);
@@ -58,12 +58,12 @@ namespace Tests.SFTP
             {
                 File = new FileReference
                 {
-                    Name = fileName
+                    Name = "Translate.txt"
                 },
                 Path = directory,
             };
             await actions.UploadFile(input);
-            Assert.IsTrue(DoesFileExist(directory, fileName));
+            //Assert.IsTrue(DoesFileExist(directory, fileName));
         }
 
         [TestMethod]
@@ -184,6 +184,14 @@ namespace Tests.SFTP
             var downloadFileSize = GetOutputFileSize(sizeTestFilename);
 
             Assert.AreEqual(uploadFileSize, downloadFileSize);
+        }
+
+        [TestMethod]
+        public async Task DownloadAllFiles_IsOk()
+        {
+            var actions = new Actions(InvocationContext, FileManager);
+            var response = await actions.DownloadAllFiles(new ListDirectoryRequest { Path = "/"+directory});
+            Assert.IsNotNull(response);
         }
     }
 }

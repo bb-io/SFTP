@@ -39,6 +39,10 @@ namespace Apps.SFTP.Invocables
             {
                 throw new PluginApplicationException($"{ex.Message} - Make sure the target path is correct.");
             }
+            catch (Exception ex)
+            {
+                throw new PluginApplicationException(ex.Message);
+            }
         }
 
 
@@ -64,6 +68,10 @@ namespace Apps.SFTP.Invocables
             catch (SshException ex)
             {
                 throw new PluginApplicationException($"{ex.Message} - Make sure the target path is correct.");
+            }
+            catch (Exception ex)
+            {
+                throw new PluginApplicationException(ex.Message);
             }
         }
     }

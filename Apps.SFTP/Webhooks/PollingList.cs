@@ -54,7 +54,7 @@ namespace Apps.SFTP.Webhooks
                         DirectoriesItems = directories.Where(x => newItems.Contains(x.FullName)).Select(x => new DirectoryItemDto
                         {
                             Name = x.Name,
-                            Path = x.FullName
+                            FileId = x.FullName
                         })
                     }
                 });
@@ -96,7 +96,7 @@ namespace Apps.SFTP.Webhooks
                 {
                     FlyBird = true,
                     Memory = new SFTPMemory() { FilesState = newFilesState },
-                    Result = new ChangedFilesResponse() { Files = filesInfo.Where(x => changedFilesPath.Contains(x.FullName)).Select(x => new DirectoryItemDto() { Name = x.Name, Path = x.FullName }).ToList() }
+                    Result = new ChangedFilesResponse() { Files = filesInfo.Where(x => changedFilesPath.Contains(x.FullName)).Select(x => new DirectoryItemDto() { Name = x.Name, FileId = x.FullName }).ToList() }
                 };
             }
             catch (Exception ex)
@@ -135,7 +135,7 @@ namespace Apps.SFTP.Webhooks
                 {
                     FlyBird = true,
                     Memory = new SFTPMemory() { FilesState = newFilesState },
-                    Result = new ChangedFilesResponse() { Files = deletedItems.Select(x => new DirectoryItemDto() { Name = Path.GetFileName(x), Path = x }).ToList() }
+                    Result = new ChangedFilesResponse() { Files = deletedItems.Select(x => new DirectoryItemDto() { Name = Path.GetFileName(x), FileId = x }).ToList() }
                 };
             }
             catch (Exception ex)

@@ -34,7 +34,7 @@ namespace Tests.SFTP
             var actions = new Actions(InvocationContext, FileManager);
             var input = new CreateDirectoryRequest
             {
-                DirectoryName= "/test"
+                DirectoryName= "/<!&@9fe137c94360b321&>"
             };
 
             actions.CreateDirectory(input);
@@ -58,12 +58,12 @@ namespace Tests.SFTP
             {
                 File = new FileReference
                 {
-                    Name = "Translate.txt"
+                    Name = fileName
                 },
                 Path = directory,
             };
             await actions.UploadFile(input);
-            //Assert.IsTrue(DoesFileExist(directory, fileName));
+            Assert.IsTrue(DoesFileExist(directory, fileName));
         }
 
         [TestMethod]
@@ -71,7 +71,7 @@ namespace Tests.SFTP
         {
             await UploadFile_IsOk();
             var actions = new Actions(InvocationContext, FileManager);
-            var response = await actions.DownloadFile(new DownloadFileRequest { Path = directory + '/' + fileName});
+            var response = await actions.DownloadFile(new DownloadFileRequest { FileId = directory + '/' + fileName});
             Assert.IsTrue(response.File.Name == fileName);
         }
 
@@ -79,7 +79,7 @@ namespace Tests.SFTP
         public async Task DownloadFile_Throws_for_unknown_file()
         {
             var actions = new Actions(InvocationContext, FileManager);
-            await Throws.MisconfigurationException(() => actions.DownloadFile(new DownloadFileRequest { Path = directory + '/' + "does_not_exist.txt" }));
+            await Throws.MisconfigurationException(() => actions.DownloadFile(new DownloadFileRequest { FileId = directory + '/' + "does_not_exist.txt" }));
         }
 
         [TestMethod]
@@ -178,20 +178,12 @@ namespace Tests.SFTP
                 Path = directory,
             };
             await actions.UploadFile(input);
-            await actions.DownloadFile(new DownloadFileRequest { Path = directory + '/' + sizeTestFilename });
+            await actions.DownloadFile(new DownloadFileRequest { FileId = directory + '/' + sizeTestFilename });
 
             var uploadFileSize = GetInputFileSize(sizeTestFilename);
             var downloadFileSize = GetOutputFileSize(sizeTestFilename);
 
             Assert.AreEqual(uploadFileSize, downloadFileSize);
-        }
-
-        [TestMethod]
-        public async Task DownloadAllFiles_IsOk()
-        {
-            var actions = new Actions(InvocationContext, FileManager);
-            var response = await actions.DownloadAllFiles(new ListDirectoryRequest { Path = "/"+directory});
-            Assert.IsNotNull(response);
         }
     }
 }

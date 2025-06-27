@@ -4,12 +4,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Product>SFTP</Product>
-    <Version>1.2.10</Version>
+    <Version>1.2.11</Version>
     <Description>SSH File Transfer Protocol</Description>
     <AssemblyName>Apps.SFTP</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Blackbird.Applications.Sdk.Common" Version="2.11.0" />
+    <PackageReference Include="Blackbird.Applications.SDK.Blueprints" Version="0.0.1-rc.9484" />
+    <PackageReference Include="Blackbird.Applications.Sdk.Common" Version="2.13.0-rc.9300" />
     <PackageReference Include="Blackbird.Applications.SDK.Extensions.FileManagement" Version="1.0.1" />
     <PackageReference Include="Blackbird.Applications.Sdk.Utils" Version="1.0.16" />
     <PackageReference Include="MimeTypes" Version="2.4.1">

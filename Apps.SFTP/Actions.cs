@@ -9,7 +9,6 @@ using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 using RestSharp;
 using Blackbird.Applications.Sdk.Common.Exceptions;
-using Blackbird.Applications.Sdk.Common.Files;
 
 namespace Apps.SFTP;
 
@@ -45,7 +44,7 @@ public class Actions : SFTPInvocable
                 .Select(i => new DirectoryItemDto()
                 {
                     Name = i.Name,
-                    Path = i.FullName,
+                    FileId = i.FullName,
                 }).ToList();
 
             return new ListDirectoryResponse()
@@ -72,42 +71,16 @@ public class Actions : SFTPInvocable
         {
             using var stream = new MemoryStream();
 
-            client.DownloadFile(input.Path, stream);
+            client.DownloadFile(input.FileId, stream);
             stream.Position = 0;
 
-            var mimeType = MimeTypes.GetMimeType(input.Path);
+            var mimeType = MimeTypes.GetMimeType(input.FileId);
 
-            var file = await _fileManagementClient.UploadAsync(stream, mimeType, Path.GetFileName(input.Path));
+            var file = await _fileManagementClient.UploadAsync(stream, mimeType, Path.GetFileName(input.FileId));
 
             return new DownloadFileResponse { File = file };
         });
     }
-
-    [Action("Download all files", Description = "Download all files from specified directory")]
-    public async Task<DownloadAllFilesResponse> DownloadAllFiles([ActionParameter] ListDirectoryRequest input)
-    {
-        var listResponse = ListDirectory(input);
-        var files = listResponse.DirectoriesItems.ToList();
-
-        var downloadedFiles = new List<FileReference>();
-
-        foreach (var file in files)
-        {
-            var downloadRequest = new DownloadFileRequest
-            {
-                Path = file.Path
-            };
-
-            var downloadResponse = await DownloadFile(downloadRequest);
-            downloadedFiles.Add(downloadResponse.File);
-        }
-
-        return new DownloadAllFilesResponse
-        {
-            Files = downloadedFiles
-        };
-    }
-
 
     [Action("Upload file", Description = "Upload file by path")]
     public async Task UploadFile([ActionParameter] UploadFileRequest input)

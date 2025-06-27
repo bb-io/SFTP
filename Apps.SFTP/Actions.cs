@@ -9,6 +9,7 @@ using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 using RestSharp;
 using Blackbird.Applications.Sdk.Common.Exceptions;
+using Blackbird.Applications.SDK.Blueprints;
 
 namespace Apps.SFTP;
 
@@ -64,6 +65,7 @@ public class Actions : SFTPInvocable
         });
     }
 
+    [BlueprintActionDefinition(BlueprintAction.DownloadFile)]
     [Action("Download file", Description = "Download file by path")]
     public async Task<DownloadFileResponse> DownloadFile([ActionParameter] DownloadFileRequest input)
     {
@@ -82,6 +84,7 @@ public class Actions : SFTPInvocable
         });
     }
 
+    [BlueprintActionDefinition(BlueprintAction.UploadFile)]
     [Action("Upload file", Description = "Upload file by path")]
     public async Task UploadFile([ActionParameter] UploadFileRequest input)
     {

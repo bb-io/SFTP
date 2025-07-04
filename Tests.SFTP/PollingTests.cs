@@ -27,13 +27,14 @@ public class PollingTests : TestBase
         var firstPoll = await polling.OnFilesAddedOrUpdated(new PollingEventRequest<SFTPMemory> { Memory = null, PollingTime = DateTime.Now }, new ParentFolderInput { });
         Console.WriteLine(JsonConvert.SerializeObject(firstPoll, Formatting.Indented));
 
+        Assert.IsFalse(firstPoll.FlyBird);
+
         var input = new UploadFileRequest
         {
             File = new FileReference
             {
                 Name = fileName
             },
-            Path = directory,
         };
 
         await actions.UploadFile(input);

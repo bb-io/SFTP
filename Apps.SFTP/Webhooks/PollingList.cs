@@ -7,6 +7,7 @@ using Blackbird.Applications.Sdk.Common.Connections;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.Sdk.Common.Polling;
+using Blackbird.Applications.SDK.Blueprints;
 using Renci.SshNet.Sftp;
 
 namespace Apps.SFTP.Webhooks
@@ -65,6 +66,7 @@ namespace Apps.SFTP.Webhooks
             }
         }
 
+        [BlueprintEventDefinition(BlueprintEvent.FilesCreatedOrUpdated)]
         [PollingEvent("On files created or updated", "On files created or updated")]
         public async Task<PollingEventResponse<SFTPMemory, ChangedFilesResponse>> OnFilesAddedOrUpdated(
             PollingEventRequest<SFTPMemory> request,

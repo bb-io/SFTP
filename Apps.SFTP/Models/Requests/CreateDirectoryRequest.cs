@@ -5,9 +5,9 @@ namespace Apps.SFTP.Models.Requests;
 
 public class CreateDirectoryRequest
 {
-    [Display("Directory name")]
+    [Display("Folder name")]
     public string DirectoryName { get; set; }
 
-    [Display("Parent directory path", Description = "The path, '/' being the root directory (default).")]
+    [Display("Parent folder path", Description = "The path, '/' being the root folder (default).")]
     public string? Path { get; set; }
 }

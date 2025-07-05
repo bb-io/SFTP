@@ -30,19 +30,29 @@ Before you can connect you need to make sure that:
 
 ## Actions
 
-- **Download file** Download file from server by path.
+### Files
+
 - **Upload file** Upload files to server by specified path.
+- **Download file** Download file from server by path.
 - **Delete file** Delete a file from server by specified path.
-- **Create directory** Create new directory by specified path.
-- **Delete directory** Delete directory from server by specified path.
-- **List directory files** List files (name and full path) by specified path
+- **Search files** List files (name and full path) by specified path
 - **Rename file** Rename a file by specified path from old to new
+
+### Folders
+
+- **Create folder** Create new folder by specified path.
+- **Delete folder** Delete folder from server by specified path.
 
 ## Events
 
-- **On files created or updated** This polling event triggers when file is created or updated on server.
-- **On files deleted** This polling event triggers when file is deleted from server.
-- **On directories created** This polling event triggers when directories are created within specified time interval.
+### Files
+
+- **On files updated** This polling event triggers when a file is created or updated on server.
+- **On files deleted** This polling event triggers when a file is deleted from server.
+
+### Folders
+
+- **On folders created** This polling event triggers when folders are created within specified time interval.
 
 ## Example 
 

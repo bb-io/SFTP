@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Apps.SFTP;
-using Apps.SFTP.Connections;
 using Apps.SFTP.Models.Requests;
 using Blackbird.Applications.Sdk.Common.Files;
-using Microsoft.Extensions.Options;
 using Tests.SFTP.Base;
 
 namespace Tests.SFTP
@@ -26,28 +23,6 @@ namespace Tests.SFTP
             var actions = new Actions(InvocationContext, FileManager);
             var directoryResponse = actions.ListDirectory(new ListDirectoryRequest { Path = directory });
             return directoryResponse.DirectoriesItems.Any(x => x.Name == fileName);
-        }
-
-        [TestMethod]
-        public void CreateDirectory_IsOk()
-        {
-            var actions = new Actions(InvocationContext, FileManager);
-            var input = new CreateDirectoryRequest
-            {
-                DirectoryName= "/<!&@9fe137c94360b321&>"
-            };
-
-            actions.CreateDirectory(input);
-        }
-
-        [TestMethod]
-        public void DeleteDirectory_IsOk()
-        {
-            CreateDirectory_IsOk();
-            var actions = new Actions(InvocationContext, FileManager);
-            var input = new DeleteDirectoryRequest { Path = directory };
-
-            actions.DeleteDirectory(input);
         }
 
         [TestMethod]

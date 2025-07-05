@@ -11,6 +11,6 @@ public class UploadFileRequest : IUploadFileInput
     [Display("File name")]
     public string? FileName { get; set; }
 
-    [Display("Directory path")]
+    [Display("Folder path")]
     public string? Path { get; set; }
 }

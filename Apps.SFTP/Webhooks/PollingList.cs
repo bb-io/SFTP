@@ -1,9 +1,7 @@
 ﻿using Apps.SFTP.Dtos;
 using Apps.SFTP.Invocables;
-using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Webhooks.Payload;
 using Apps.SFTP.Webhooks.Polling.Memory;
-using Blackbird.Applications.Sdk.Common.Connections;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.Sdk.Common.Polling;
@@ -12,62 +10,11 @@ using Renci.SshNet.Sftp;
 
 namespace Apps.SFTP.Webhooks
 {
-    [PollingEventList]
+    [PollingEventList("Files")]
     public class PollingList(InvocationContext invocationContext) : SFTPInvocable(invocationContext)
     {
-        [PollingEvent("On directories created", Description = "Triggers when directories are created")]
-        public Task<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>> OnDirectoriesCreated(
-            PollingEventRequest<SftpDirectoryMemory> request,
-            [PollingEventParameter] ParentFolderInput parentFolder)
-        {
-            try
-            {
-                using var client = new BlackbirdSftpClient(Creds);
-                var directories = ListDirectoryFolders(client, parentFolder.Folder ?? "/",
-                    parentFolder.IncludeSubfolders ?? false);
-
-                var directoryState = directories.Select(x => x.FullName).ToList();
-                if (request.Memory == null)
-                {
-                    return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
-                    {
-                        FlyBird = false,
-                        Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
-                    });
-                }
-
-                var newItems = directoryState.Except(request.Memory.DirectoriesState).ToList();
-                if (newItems.Count == 0)
-                {
-                    return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
-                    {
-                        FlyBird = false,
-                        Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
-                    });
-                }
-
-                return Task.FromResult<PollingEventResponse<SftpDirectoryMemory, ListDirectoryResponse>>(new()
-                {
-                    FlyBird = true,
-                    Memory = new SftpDirectoryMemory { DirectoriesState = directoryState },
-                    Result = new ListDirectoryResponse
-                    {
-                        DirectoriesItems = directories.Where(x => newItems.Contains(x.FullName)).Select(x => new DirectoryItemDto
-                        {
-                            Name = x.Name,
-                            FileId = x.FullName
-                        })
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                throw new PluginApplicationException(ex.Message);
-            }
-        }
-
         [BlueprintEventDefinition(BlueprintEvent.FilesCreatedOrUpdated)]
-        [PollingEvent("On files created or updated", "On files created or updated")]
+        [PollingEvent("On files updated", "Triggered when files are updated or new files are created")]
         public async Task<PollingEventResponse<SFTPMemory, ChangedFilesResponse>> OnFilesAddedOrUpdated(
             PollingEventRequest<SFTPMemory> request,
             [PollingEventParameter] ParentFolderInput parentFolder
@@ -107,7 +54,7 @@ namespace Apps.SFTP.Webhooks
             }
         }
 
-        [PollingEvent("On files deleted", "On files deleted")]
+        [PollingEvent("On files deleted", "Triggered when files are deleted")]
         public async Task<PollingEventResponse<SFTPMemory, ChangedFilesResponse>> OnFilesDeleted(
             PollingEventRequest<SFTPMemory> request,
             [PollingEventParameter] ParentFolderInput parentFolder

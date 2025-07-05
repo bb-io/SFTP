@@ -1,5 +1,4 @@
-﻿using System.Net.Mime;
-using Blackbird.Applications.Sdk.Common;
+﻿using Blackbird.Applications.Sdk.Common;
 using Apps.SFTP.Models.Requests;
 using Apps.SFTP.Models.Responses;
 using Apps.SFTP.Dtos;
@@ -8,12 +7,11 @@ using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 using RestSharp;
-using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.SDK.Blueprints;
 
 namespace Apps.SFTP;
 
-[ActionList]
+[ActionList("Files")]
 public class Actions : SFTPInvocable
 {
     private readonly IFileManagementClient _fileManagementClient;
@@ -23,7 +21,7 @@ public class Actions : SFTPInvocable
         _fileManagementClient = fileManagementClient;
     }
 
-    [Action("Search files", Description = "Search all files in specified directory")]
+    [Action("Search files", Description = "Search all files in specified folder")]
     public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
         return UseClient(client =>
@@ -117,27 +115,6 @@ public class Actions : SFTPInvocable
     {
         UseClient(client => {
             client.DeleteFile(input.FilePath);
-            return true;
-        });
-    }
-
-    [Action("Create directory", Description = "Create new directory by path")]
-    public void CreateDirectory([ActionParameter] CreateDirectoryRequest input)
-    {
-        UseClient(client =>
-        {
-            var path = input.Path ?? "/";
-            client.CreateDirectory($"{path.TrimEnd('/')}/{input.DirectoryName}");
-            return true;
-        });
-    }
-
-    [Action("Delete directory", Description = "Delete directory by path")]
-    public void DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
-    {
-        UseClient(client =>
-        {
-            client.DeleteDirectory(input.Path);
             return true;
         });
     }

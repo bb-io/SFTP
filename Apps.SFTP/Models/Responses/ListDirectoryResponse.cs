@@ -5,6 +5,6 @@ namespace Apps.SFTP.Models.Responses;
 
 public class ListDirectoryResponse
 {
-    [Display("Directory items")]
+    [Display("Folder items")]
     public IEnumerable<DirectoryItemDto> DirectoriesItems { get; set; }
 }

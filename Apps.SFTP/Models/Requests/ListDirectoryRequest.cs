@@ -5,7 +5,7 @@ namespace Apps.SFTP.Models.Requests;
 
 public class ListDirectoryRequest
 {
-    [Display("Directory path")]
+    [Display("Folder path")]
     public string Path { get; set; }
 
     [Display("Updated from")]

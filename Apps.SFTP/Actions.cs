@@ -48,7 +48,8 @@ public class Actions : SFTPInvocable
 
             return new ListDirectoryResponse()
             {
-                DirectoriesItems = files
+                DirectoriesItems = files,
+                ItemNames = files.Select(x => x.Name)
             };
         });
     }

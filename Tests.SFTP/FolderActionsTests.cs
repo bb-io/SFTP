@@ -8,7 +8,7 @@ namespace Tests.SFTP
     {
         public const string fileName = "Translate.txt";
         public const string alternativeFileName = "Translate_renamed.txt";
-        public const string directory = "test";
+        public const string directory = "test2";
 
         public const string sizeTestFilename = "test.json";
 
@@ -18,7 +18,7 @@ namespace Tests.SFTP
             var actions = new FolderActions(InvocationContext);
             var input = new CreateDirectoryRequest
             {
-                DirectoryName= "/<!&@9fe137c94360b321&>"
+                FolderPath = "/<!&@9fe137c94360b321&>"
             };
 
             actions.CreateDirectory(input);
@@ -26,10 +26,14 @@ namespace Tests.SFTP
 
         [TestMethod]
         public void DeleteDirectory_IsOk()
-        {
-            CreateDirectory_IsOk();
+        {            
             var actions = new FolderActions(InvocationContext);
-            var input = new DeleteDirectoryRequest { Path = directory };
+            actions.CreateDirectory(new CreateDirectoryRequest
+            {
+                FolderPath = null,
+                Name = directory,
+            });
+            var input = new DeleteDirectoryRequest { FolderPath = directory  };
 
             actions.DeleteDirectory(input);
         }

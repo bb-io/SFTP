@@ -1,12 +1,15 @@
 ﻿
+using Apps.SFTP.DataHandlers;
 using Blackbird.Applications.Sdk.Common;
+using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
 
 namespace Apps.SFTP.Models.Requests;
 
 public class ListDirectoryRequest
 {
     [Display("Folder path")]
-    public string Path { get; set; }
+    [FileDataSource(typeof(FolderDataHandler))]
+    public string FolderPath { get; set; }
 
     [Display("Updated from")]
     public DateTime? UpdatedFrom { get; set; }

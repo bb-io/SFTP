@@ -32,7 +32,7 @@ namespace Apps.SFTP.Webhooks
                         FlyBird = false,
                         Memory = new SftpDirectoryMemory { DirectoriesState = directoryState }
                     });
-                }
+                } 
 
                 var newItems = directoryState.Except(request.Memory.DirectoriesState).ToList();
                 if (newItems.Count == 0)

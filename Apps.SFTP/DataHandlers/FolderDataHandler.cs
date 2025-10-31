@@ -4,18 +4,19 @@ using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
 
 namespace Apps.SFTP.DataHandlers;
-public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvocable(invocationContext), IFileDataSourceItemHandler
+public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvocable(invocationContext), IAsyncFileDataSourceItemHandler
 {
-    public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
+    public async Task<IEnumerable<FileDataItem>> GetFolderContentAsync(FolderContentDataSourceContext context, CancellationToken cancellationToken)
     {
-        return UseClient(client => client.ListDirectory(context.FolderId ?? "/"))
+        var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId;
+        return UseClient(client => client.ListDirectory(path))
             .Where(x => x.IsDirectory)
             .Where(x => !x.Name.All(y => y == '.'))
             .Select(x => new Folder { Id = x.FullName, Date = x.LastWriteTime, DisplayName = x.Name, IsSelectable = true })
             .ToList<FileDataItem>();
     }
 
-    public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
+    public async Task<IEnumerable<FolderPathItem>> GetFolderPathAsync(FolderPathDataSourceContext context, CancellationToken cancellationToken)
     {
         var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "/", DisplayName = "/"} };
 

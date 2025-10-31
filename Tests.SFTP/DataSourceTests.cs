@@ -17,7 +17,7 @@ public class DataSourceTests : TestBase
     public const string sizeTestFilename = "test.json";
 
     [TestMethod]
-    public async Task Folder_data_handler()
+    public void Folder_data_handler()
     {
         var handler = new FolderDataHandler(InvocationContext);
 
@@ -39,7 +39,14 @@ public class DataSourceTests : TestBase
         Console.WriteLine(JsonConvert.SerializeObject(breadCrumbs, Formatting.Indented));
         Assert.IsTrue(breadCrumbs.First().DisplayName == "/");
         Assert.IsTrue(breadCrumbs.Last().DisplayName == "Test 1/");
+    }
 
+    [TestMethod]
+    public void Folder_data_handler_empty()
+    {
+        var handler = new FolderDataHandler(InvocationContext);
+        var folders = handler.GetFolderContent(new FolderContentDataSourceContext { FolderId = "" });
+        Console.WriteLine(JsonConvert.SerializeObject(folders, Formatting.Indented));
     }
 
     [TestMethod]

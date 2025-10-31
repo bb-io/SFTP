@@ -10,7 +10,8 @@ public class FileDataHandler(InvocationContext invocationContext) : SFTPInvocabl
 {
     public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
     {
-        return UseClient(client => client.ListDirectory(context.FolderId ?? "/"))
+        var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId;
+        return UseClient(client => client.ListDirectory(path))
             .Where(x => !x.Name.All(y => y == '.'))
             .Where(x => x.IsDirectory || x.IsRegularFile)
             .Select(Convert)
@@ -30,7 +31,7 @@ public class FileDataHandler(InvocationContext invocationContext) : SFTPInvocabl
 
     public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
     {
-        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "/", DisplayName = "/"} };
+        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "", DisplayName = "/"} };
 
         var directoryPath = Path.GetDirectoryName(context.FileDataItemId ?? "/");
         if (string.IsNullOrEmpty(directoryPath))

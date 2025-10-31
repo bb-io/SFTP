@@ -4,9 +4,9 @@ using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
 
 namespace Apps.SFTP.DataHandlers;
-public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvocable(invocationContext), IAsyncFileDataSourceItemHandler
+public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvocable(invocationContext), IFileDataSourceItemHandler
 {
-    public async Task<IEnumerable<FileDataItem>> GetFolderContentAsync(FolderContentDataSourceContext context, CancellationToken cancellationToken)
+    public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
     {
         var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId;
         return UseClient(client => client.ListDirectory(path))
@@ -16,9 +16,9 @@ public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvoca
             .ToList<FileDataItem>();
     }
 
-    public async Task<IEnumerable<FolderPathItem>> GetFolderPathAsync(FolderPathDataSourceContext context, CancellationToken cancellationToken)
+    public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
     {
-        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "/", DisplayName = "/"} };
+        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "", DisplayName = "/"} };
 
         var directoryPath = Path.GetDirectoryName(context.FileDataItemId ?? "/");
         if (string.IsNullOrEmpty(directoryPath))

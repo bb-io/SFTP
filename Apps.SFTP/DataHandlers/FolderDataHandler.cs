@@ -9,7 +9,7 @@ public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvoca
 {
     public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
     {
-        var path = string.IsNullOrEmpty(context.FolderId) ? "/" : WebUtility.UrlDecode(context.FolderId);
+        var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId.Replace("root", "/");
         return UseClient(client => client.ListDirectory(path))
             .Where(x => x.IsDirectory)
             .Where(x => !x.Name.All(y => y == '.'))
@@ -19,7 +19,7 @@ public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvoca
 
     public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
     {
-        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = WebUtility.UrlEncode("/"), DisplayName = "/"} };
+        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "root", DisplayName = "/"} };
 
         var directoryPath = Path.GetDirectoryName(context.FileDataItemId ?? "/");
         if (string.IsNullOrEmpty(directoryPath))

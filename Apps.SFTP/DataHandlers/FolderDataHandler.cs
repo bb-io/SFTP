@@ -2,13 +2,14 @@
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
+using System.Web;
 
 namespace Apps.SFTP.DataHandlers;
 public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvocable(invocationContext), IFileDataSourceItemHandler
 {
     public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
     {
-        var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId;
+        var path = string.IsNullOrEmpty(context.FolderId) ? "/" : HttpUtility.HtmlDecode(context.FolderId);
         return UseClient(client => client.ListDirectory(path))
             .Where(x => x.IsDirectory)
             .Where(x => !x.Name.All(y => y == '.'))
@@ -18,7 +19,7 @@ public class FolderDataHandler(InvocationContext invocationContext) : SFTPInvoca
 
     public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
     {
-        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = "", DisplayName = "/"} };
+        var folderPaths = new List<FolderPathItem>() { new FolderPathItem { Id = HttpUtility.HtmlEncode("/"), DisplayName = "/"} };
 
         var directoryPath = Path.GetDirectoryName(context.FileDataItemId ?? "/");
         if (string.IsNullOrEmpty(directoryPath))

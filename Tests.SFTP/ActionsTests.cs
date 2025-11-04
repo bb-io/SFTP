@@ -10,14 +10,14 @@ namespace Tests.SFTP
     {
         public const string fileName = "Translate.txt";
         public const string alternativeFileName = "Translate_renamed.txt";
-        public const string directory = "test";
+        public const string directory = "/test";
 
         public const string sizeTestFilename = "test.json";
 
         private bool DoesFileExist(string directory, string fileName)
         {
             var actions = new Actions(InvocationContext, FileManager);
-            var directoryResponse = actions.ListDirectory(new ListDirectoryRequest { Path = directory });
+            var directoryResponse = actions.ListDirectory(new ListDirectoryRequest { FolderPath = directory });
             return directoryResponse.DirectoriesItems.Any(x => x.Name == fileName);
         }
 
@@ -58,7 +58,7 @@ namespace Tests.SFTP
         {
             await UploadFile_IsOk();
             var actions = new Actions(InvocationContext, FileManager);
-            var input = new RenameFileRequest { NewPath = directory + '/' + alternativeFileName, OldPath = directory + '/' + fileName };
+            var input = new RenameFileRequest { NewFileName = alternativeFileName, OldPath = directory + '/' + fileName };
             actions.RenameFile(input);
 
             Assert.IsTrue(DoesFileExist(directory, alternativeFileName));
@@ -69,7 +69,7 @@ namespace Tests.SFTP
         {
             await UploadFile_IsOk();
             var actions = new Actions(InvocationContext, FileManager);
-            var input = new RenameFileRequest { NewPath = directory + '/' + alternativeFileName, OldPath = directory + '/' + "does_not_exist.txt" };
+            var input = new RenameFileRequest { NewFileName = alternativeFileName, OldPath = directory + '/' + "does_not_exist.txt" };
 
             Throws.MisconfigurationException(() => actions.RenameFile(input));
         }
@@ -82,7 +82,7 @@ namespace Tests.SFTP
             var input = new DeleteFileRequest { FilePath = directory + '/' + fileName };
 
             actions.DeleteFile(input);
-            Assert.IsFalse(DoesFileExist(directory, alternativeFileName));
+            Assert.IsFalse(DoesFileExist(directory, fileName));
         }
 
         [TestMethod]
@@ -99,7 +99,7 @@ namespace Tests.SFTP
         {
             await UploadFile_IsOk();
             var actions = new Actions(InvocationContext, FileManager);
-            var input = new ListDirectoryRequest { Path = directory };
+            var input = new ListDirectoryRequest { FolderPath = directory };
             var response = actions.ListDirectory(input);
 
             Assert.IsTrue(response.DirectoriesItems.Count() > 0);
@@ -121,7 +121,7 @@ namespace Tests.SFTP
             var updatedTo = DateTime.Now.AddMinutes(1);
             var input = new ListDirectoryRequest
             {
-                Path = directory,
+                FolderPath = directory,
                 UpdatedFrom = updatedFrom,
                 UpdatedTo = updatedTo
             };

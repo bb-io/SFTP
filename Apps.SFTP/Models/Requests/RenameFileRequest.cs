@@ -1,12 +1,15 @@
-﻿using Blackbird.Applications.Sdk.Common;
+﻿using Apps.SFTP.DataHandlers;
+using Blackbird.Applications.Sdk.Common;
+using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
 
 namespace Apps.SFTP.Models.Requests;
 
 public class RenameFileRequest
 {
-    [Display("Old full path")]
+    [Display("File path")]
+    [FileDataSource(typeof(FileDataHandler))]
     public string OldPath { get; set; }
 
-    [Display("New full path")]
-    public string NewPath { get; set; }
+    [Display("New file name")]
+    public string NewFileName { get; set; }
 }

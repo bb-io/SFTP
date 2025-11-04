@@ -1,7 +1,6 @@
 ﻿using Blackbird.Applications.Sdk.Common;
 using Apps.SFTP.Models.Requests;
 using Blackbird.Applications.Sdk.Common.Actions;
-using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 
@@ -15,8 +14,7 @@ public class FolderActions(InvocationContext context) : SFTPInvocable(context)
     {
         UseClient(client =>
         {
-            var path = input.Path ?? "/";
-            client.CreateDirectory($"{path.TrimEnd('/')}/{input.DirectoryName}");
+            client.CreateDirectory(input.FolderPath + "/" + input.Name);
             return true;
         });
     }
@@ -26,7 +24,7 @@ public class FolderActions(InvocationContext context) : SFTPInvocable(context)
     {
         UseClient(client =>
         {
-            client.DeleteDirectory(input.Path);
+            client.DeleteDirectory(input.FolderPath);
             return true;
         });
     }

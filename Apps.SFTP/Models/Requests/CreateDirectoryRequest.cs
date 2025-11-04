@@ -1,13 +1,16 @@
 ﻿
+using Apps.SFTP.DataHandlers;
 using Blackbird.Applications.Sdk.Common;
+using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
 
 namespace Apps.SFTP.Models.Requests;
 
 public class CreateDirectoryRequest
 {
-    [Display("Folder name")]
-    public string DirectoryName { get; set; }
+    [Display("Folder path")]
+    [FileDataSource(typeof(FolderDataHandler))]
+    public string? FolderPath { get; set; }
 
-    [Display("Parent folder path", Description = "The path, '/' being the root folder (default).")]
-    public string? Path { get; set; }
+    [Display("Folder name")]
+    public string Name { get; set; }
 }

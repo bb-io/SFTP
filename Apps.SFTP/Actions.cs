@@ -26,7 +26,7 @@ public class Actions : SFTPInvocable
     {
         return UseClient(client =>
         {
-            var filesQuery = client.ListDirectory(input.Path)
+            var filesQuery = client.ListDirectory(input.FolderPath)
                 .Where(x => x.IsRegularFile);
 
             if (input.UpdatedFrom.HasValue)
@@ -57,9 +57,12 @@ public class Actions : SFTPInvocable
     [Action("Rename file", Description = "Rename a path from old to new")]
     public void RenameFile([ActionParameter] RenameFileRequest input)
     {
+        string directory = Path.GetDirectoryName(input.OldPath)!;
+        string newFullPath = Path.Combine(directory, input.NewFileName).Replace('\\', '/'); ;
+
         UseClient(client =>
         {
-            client.RenameFile(input.OldPath, input.NewPath);
+            client.RenameFile(input.OldPath, newFullPath);
             return true;
         });
     }

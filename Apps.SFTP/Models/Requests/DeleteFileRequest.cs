@@ -1,9 +1,12 @@
-﻿using Blackbird.Applications.Sdk.Common;
+﻿using Apps.SFTP.DataHandlers;
+using Blackbird.Applications.Sdk.Common;
+using Blackbird.Applications.SDK.Extensions.FileManagement.Models.FileDataSourceItems;
 
 namespace Apps.SFTP.Models.Requests;
 
 public class DeleteFileRequest
 {
-    [Display("Full path")]
+    [Display("File path")]
+    [FileDataSource(typeof(FileDataHandler))]
     public string FilePath { get; set; }
 }

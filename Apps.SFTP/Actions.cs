@@ -8,6 +8,7 @@ using Blackbird.Applications.Sdk.Common.Invocation;
 using Apps.SFTP.Invocables;
 using RestSharp;
 using Blackbird.Applications.SDK.Blueprints;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 
 namespace Apps.SFTP;
 
@@ -73,14 +74,18 @@ public class Actions : SFTPInvocable
     {
         return await UseClientAsync(async client =>
         {
-            using var stream = new MemoryStream();
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+
+            await using var stream = new FileStream(tempPath,FileMode.Create,FileAccess.ReadWrite,FileShare.None,bufferSize: 81920,useAsync: true);
 
             client.DownloadFile(input.FileId, stream);
+
             stream.Position = 0;
 
             var mimeType = MimeTypes.GetMimeType(input.FileId);
+            var fileName = Path.GetFileName(input.FileId);
 
-            var file = await _fileManagementClient.UploadAsync(stream, mimeType, Path.GetFileName(input.FileId));
+            var file = await _fileManagementClient.UploadAsync(stream, mimeType, fileName);
 
             return new DownloadFileResponse { File = file };
         });

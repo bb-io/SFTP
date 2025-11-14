@@ -161,7 +161,7 @@ namespace Tests.SFTP
         public async Task DownloadFile__IsOk()
         {
             var actions = new Actions(InvocationContext, FileManager);
-            var input = new DownloadFileRequest { FileId= "/YouTube/Input_yt/FinalTestAudio.mp3" };
+            var input = new DownloadFileRequest { FileId= "" };
             var response = await actions.DownloadFile(input);
             Assert.IsNotNull(response);
         }

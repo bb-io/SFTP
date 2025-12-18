@@ -14,10 +14,10 @@ public class ConnectionValidator : IConnectionValidator
             client.Connect();
 
             if (client.IsConnected)
-                return new ConnectionValidationResponse
-                {
-                    IsValid = true
-                };
+            {
+                client.Disconnect();
+                return new ConnectionValidationResponse { IsValid = true };
+            }
 
             return new ConnectionValidationResponse
             {

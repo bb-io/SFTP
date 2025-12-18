@@ -161,7 +161,7 @@ namespace Tests.SFTP
         public async Task DownloadFile__IsOk()
         {
             var actions = new Actions(InvocationContext, FileManager);
-            var input = new DownloadFileRequest { FileId= "" };
+            var input = new DownloadFileRequest { FileId= "/Sartorious/projects/SPT6019_de_DE_21_Installation/projectConfig.xml" };
             var response = await actions.DownloadFile(input);
             Assert.IsNotNull(response);
         }

@@ -11,6 +11,7 @@ public class ConnectionValidator : IConnectionValidator
         try
         {
             using var client = new BlackbirdSftpClient(authProviders);
+            client.Connect();
 
             if (client.IsConnected)
                 return new ConnectionValidationResponse

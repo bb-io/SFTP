@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Product>SFTP</Product>
-    <Version>1.2.18</Version>
+    <Version>1.2.19</Version>
     <Description>SSH File Transfer Protocol</Description>
     <AssemblyName>Apps.SFTP</AssemblyName>
   </PropertyGroup>

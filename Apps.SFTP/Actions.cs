@@ -75,13 +75,13 @@ public class Actions : SFTPInvocable
     {
         return await UseClientAsync(async client =>
         {
-
-            var attrs = client.GetAttributes(input.FileId);
-            using var sftpStream = client.OpenRead(input.FileId);
             var fileName = Path.GetFileName(input.FileId);
             var mimeType = MimeTypes.GetMimeType(fileName);
 
-            var file = await _fileManagementClient.UploadAsync(sftpStream, mimeType, fileName);
+            using var ms = new MemoryStream();
+            client.DownloadFile(input.FileId, ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            var file = await _fileManagementClient.UploadAsync(ms, mimeType, fileName);
 
             return new DownloadFileResponse { File = file };
         });

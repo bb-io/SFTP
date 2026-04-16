@@ -363,4 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /ConsoleApp1
 /Tests.SFTP/appsettings.json
-/Tests.SFTP/appsettings.json
+
+/.idea

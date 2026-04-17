@@ -12,19 +12,19 @@ namespace Apps.SFTP;
 public class FolderActions(InvocationContext context) : FileTransferInvocable(context)
 {
     [Action("Create folder", Description = "Create new folder by path")]
-    public void CreateDirectory([ActionParameter] CreateDirectoryRequest input)
+    public async Task CreateDirectory([ActionParameter] CreateDirectoryRequest input)
     {
         var path = string.IsNullOrWhiteSpace(input.FolderPath)
             ? input.Name
             : $"{input.FolderPath.TrimEnd('/')}/{input.Name}";
 
         using var client = FileTransferClientFactory.Create(Creds);
-        client.ConnectAsync().GetAwaiter().GetResult();
-        client.ExecuteAsync(async () => await client.CreateDirectoryAsync(path)).GetAwaiter().GetResult();
+        await client.ConnectAsync();
+        await client.ExecuteAsync(() => client.CreateDirectoryAsync(path));
     }
 
     [Action("Delete folder", Description = "Delete folder by path")]
-    public void DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
+    public async Task DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
     {
         if (string.IsNullOrWhiteSpace(input.FolderPath))
         {
@@ -32,7 +32,7 @@ public class FolderActions(InvocationContext context) : FileTransferInvocable(co
         }
 
         using var client = FileTransferClientFactory.Create(Creds);
-        client.ConnectAsync().GetAwaiter().GetResult();
-        client.ExecuteAsync(async () => await client.DeleteDirectoryAsync(input.FolderPath)).GetAwaiter().GetResult();
+        await client.ConnectAsync();
+        await client.ExecuteAsync(() => client.DeleteDirectoryAsync(input.FolderPath));
     }
 }

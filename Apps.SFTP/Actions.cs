@@ -18,24 +18,22 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
     : FileTransferInvocable(context)
 {
     [Action("Search files", Description = "Search all files in specified folder")]
-    public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
+    public async Task<ListDirectoryResponse> ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
         var folderPath = string.IsNullOrWhiteSpace(input.FolderPath) ? "/" : input.FolderPath;
         using var client = FileTransferClientFactory.Create(Creds);
-        client.ConnectAsync().GetAwaiter().GetResult();
+        await client.ConnectAsync();
 
-        return client.ExecuteAsync(() => Task.FromResult(ListDirectoryInternal(client, folderPath, input)))
-            .GetAwaiter()
-            .GetResult();
+        return await client.ExecuteAsync(() => ListDirectoryInternal(client, folderPath, input));
     }
 
     [Action("Rename file", Description = "Rename a path from old to new")]
-    public void RenameFile([ActionParameter] RenameFileRequest input)
+    public async Task RenameFile([ActionParameter] RenameFileRequest input)
     {
         var newFullPath = BuildRenamedPath(input.OldPath, input.NewFileName);
         using var client = FileTransferClientFactory.Create(Creds);
-        client.ConnectAsync().GetAwaiter().GetResult();
-        client.ExecuteAsync(async () => await client.RenameAsync(input.OldPath, newFullPath)).GetAwaiter().GetResult();
+        await client.ConnectAsync();
+        await client.ExecuteAsync(() => client.RenameAsync(input.OldPath, newFullPath));
     }
 
     [BlueprintActionDefinition(BlueprintAction.DownloadFile)]
@@ -100,7 +98,7 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
     }
 
     [Action("Delete file", Description = "Delete file by path")]
-    public void DeleteFile([ActionParameter] DeleteFileRequest input)
+    public async Task DeleteFile([ActionParameter] DeleteFileRequest input)
     {
         if (string.IsNullOrWhiteSpace(input.FilePath))
         {
@@ -108,16 +106,16 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
         }
 
         using var client = FileTransferClientFactory.Create(Creds);
-        client.ConnectAsync().GetAwaiter().GetResult();
-        client.ExecuteAsync(async () => await client.DeleteFileAsync(input.FilePath)).GetAwaiter().GetResult();
+        await client.ConnectAsync();
+        await client.ExecuteAsync(() => client.DeleteFileAsync(input.FilePath));
     }
 
-    private static ListDirectoryResponse ListDirectoryInternal(
+    private static async Task<ListDirectoryResponse> ListDirectoryInternal(
         FileTransferClient client,
         string folderPath,
         ListDirectoryRequest input)
     {
-        var filesQuery = client.ListDirectoryAsync(folderPath).GetAwaiter().GetResult()
+        var filesQuery = (await client.ListDirectoryAsync(folderPath))
             .Where(x => x.IsFile);
 
         if (input.UpdatedFrom.HasValue)

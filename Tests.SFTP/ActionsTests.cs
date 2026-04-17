@@ -32,10 +32,10 @@ public abstract class ActionsTestsBase : TestBase
     {
     }
 
-    private bool DoesFileExist(string directory, string fileName)
+    private async Task<bool> DoesFileExist(string directory, string fileName)
     {
         var actions = new Actions(InvocationContext, FileManager);
-        var directoryResponse = actions.ListDirectory(new ListDirectoryRequest { FolderPath = directory });
+        var directoryResponse = await actions.ListDirectory(new ListDirectoryRequest { FolderPath = directory });
         return directoryResponse.DirectoriesItems.Any(x => x.Name == fileName);
     }
 
@@ -52,7 +52,7 @@ public abstract class ActionsTestsBase : TestBase
             Path = DirectoryPath,
         });
 
-        Assert.IsTrue(DoesFileExist(DirectoryPath, FileName));
+        Assert.IsTrue(await DoesFileExist(DirectoryPath, FileName));
     }
 
     [TestMethod]
@@ -79,13 +79,13 @@ public abstract class ActionsTestsBase : TestBase
         await UploadFile_IsOk();
 
         var actions = new Actions(InvocationContext, FileManager);
-        actions.RenameFile(new RenameFileRequest
+        await actions.RenameFile(new RenameFileRequest
         {
             NewFileName = AlternativeFileName,
             OldPath = DirectoryPath + '/' + FileName
         });
 
-        Assert.IsTrue(DoesFileExist(DirectoryPath, AlternativeFileName));
+        Assert.IsTrue(await DoesFileExist(DirectoryPath, AlternativeFileName));
     }
 
     [TestMethod]
@@ -94,7 +94,7 @@ public abstract class ActionsTestsBase : TestBase
         await UploadFile_IsOk();
 
         var actions = new Actions(InvocationContext, FileManager);
-        Throws.MisconfigurationException(() => actions.RenameFile(new RenameFileRequest
+        await Throws.MisconfigurationException(() => actions.RenameFile(new RenameFileRequest
         {
             NewFileName = AlternativeFileName,
             OldPath = DirectoryPath + '/' + "does_not_exist.txt"
@@ -107,15 +107,15 @@ public abstract class ActionsTestsBase : TestBase
         await UploadFile_IsOk();
 
         var actions = new Actions(InvocationContext, FileManager);
-        actions.DeleteFile(new DeleteFileRequest { FilePath = DirectoryPath + '/' + FileName });
-        Assert.IsFalse(DoesFileExist(DirectoryPath, FileName));
+        await actions.DeleteFile(new DeleteFileRequest { FilePath = DirectoryPath + '/' + FileName });
+        Assert.IsFalse(await DoesFileExist(DirectoryPath, FileName));
     }
 
     [TestMethod]
-    public void DeleteFile_Throws_for_unknown_file()
+    public async Task DeleteFile_Throws_for_unknown_file()
     {
         var actions = new Actions(InvocationContext, FileManager);
-        Throws.MisconfigurationException(() => actions.DeleteFile(new DeleteFileRequest
+        await Throws.MisconfigurationException(() => actions.DeleteFile(new DeleteFileRequest
         {
             FilePath = DirectoryPath + '/' + "does_not_exists.txt"
         }));
@@ -127,7 +127,7 @@ public abstract class ActionsTestsBase : TestBase
         await UploadFile_IsOk();
 
         var actions = new Actions(InvocationContext, FileManager);
-        var response = actions.ListDirectory(new ListDirectoryRequest { FolderPath = DirectoryPath });
+        var response = await actions.ListDirectory(new ListDirectoryRequest { FolderPath = DirectoryPath });
         Assert.IsTrue(response.DirectoriesItems.Any());
     }
 
@@ -137,7 +137,7 @@ public abstract class ActionsTestsBase : TestBase
         await UploadFile_IsOk();
 
         var actions = new Actions(InvocationContext, FileManager);
-        var response = actions.ListDirectory(new ListDirectoryRequest
+        var response = await actions.ListDirectory(new ListDirectoryRequest
         {
             FolderPath = DirectoryPath,
             UpdatedFrom = DateTime.Now.AddMinutes(-1),

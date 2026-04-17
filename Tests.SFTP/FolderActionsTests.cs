@@ -28,10 +28,10 @@ public abstract class FolderActionsTestsBase : TestBase
     }
 
     [TestMethod]
-    public void CreateDirectory_IsOk()
+    public async Task CreateDirectory_IsOk()
     {
         var actions = new FolderActions(InvocationContext);
-        actions.CreateDirectory(new CreateDirectoryRequest
+        await actions.CreateDirectory(new CreateDirectoryRequest
         {
             FolderPath = "/<!&@9fe137c94360b321&>",
             Name = DirectoryName
@@ -39,15 +39,15 @@ public abstract class FolderActionsTestsBase : TestBase
     }
 
     [TestMethod]
-    public void DeleteDirectory_IsOk()
+    public async Task DeleteDirectory_IsOk()
     {
         var actions = new FolderActions(InvocationContext);
-        actions.CreateDirectory(new CreateDirectoryRequest
+        await actions.CreateDirectory(new CreateDirectoryRequest
         {
             FolderPath = null,
             Name = DirectoryName,
         });
 
-        actions.DeleteDirectory(new DeleteDirectoryRequest { FolderPath = DirectoryName });
+        await actions.DeleteDirectory(new DeleteDirectoryRequest { FolderPath = DirectoryName });
     }
 }

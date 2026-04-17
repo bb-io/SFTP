@@ -22,9 +22,9 @@ public class DataSourceTests : TestBase
         var handler = new FolderDataHandler(InvocationContext);
 
         var actions = new FolderActions(InvocationContext);
-        actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = null, Name = "Test 1"});
-        actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = null, Name = "Test 2" });
-        actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = "/Test 1", Name = "Test 3" });
+        await actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = null, Name = "Test 1"});
+        await actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = null, Name = "Test 2" });
+        await actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = "/Test 1", Name = "Test 3" });
 
         var folders = await handler.GetFolderContentAsync(new FolderContentDataSourceContext { FolderId = null }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(folders, Formatting.Indented));

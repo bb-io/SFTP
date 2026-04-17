@@ -1,4 +1,5 @@
-﻿using Blackbird.Applications.Sdk.Common.Authentication;
+using Apps.SFTP.Api;
+using Blackbird.Applications.Sdk.Common.Authentication;
 using Blackbird.Applications.Sdk.Common.Connections;
 
 namespace Apps.SFTP.Connections;
@@ -6,40 +7,39 @@ namespace Apps.SFTP.Connections;
 public class ConnectionValidator : IConnectionValidator
 {
     public async ValueTask<ConnectionValidationResponse> ValidateConnection(
-        IEnumerable<AuthenticationCredentialsProvider> authProviders, CancellationToken cancellationToken)
+        IEnumerable<AuthenticationCredentialsProvider> authProviders,
+        CancellationToken cancellationToken)
     {
         try
         {
-            using var client = new BlackbirdSftpClient(authProviders);
-            client.Connect();
-
-            if (client.IsConnected)
+            using var client = FileTransferClientFactory.Create(authProviders);
+            await client.ConnectAsync(cancellationToken);
+            if (!client.IsConnected)
             {
-                client.Disconnect();
-                return new ConnectionValidationResponse { IsValid = true };
+                return new ConnectionValidationResponse
+                {
+                    IsValid = false,
+                    Message = "Failed to connect. Please check your connection parameters."
+                };
             }
 
-            return new ConnectionValidationResponse
-            {
-                IsValid = false,
-                Message = "Failed to connect. Please check your connection parameters."
-            };
-        } catch(FormatException ex)
+            return new ConnectionValidationResponse { IsValid = true };
+        }
+        catch (FormatException ex)
         {
-            return new ConnectionValidationResponse()
+            return new ConnectionValidationResponse
             {
                 IsValid = false,
                 Message = ex.Message.Split("string ").Last(),
             };
-        } catch(Exception ex)
+        }
+        catch (Exception ex)
         {
-            return new ConnectionValidationResponse()
+            return new ConnectionValidationResponse
             {
                 IsValid = false,
                 Message = ex.Message,
             };
         }
-        
-
     }
 }

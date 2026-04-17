@@ -1,9 +1,17 @@
 {
-    "ConnectionDefinition": {
-        "host": "",
-        "login": "",
-        "password": "",
-        "port": ""
-    },
-    "TestFolder": "TestFiles"
+  "ConnectionDefinition": {
+    "host": "",
+    "login": "",
+    "password": "",
+    "port": "",
+    "connectionType": "SFTP information"
+  },
+  "FtpConnectionDefinition": {
+    "host": "",
+    "login": "",
+    "password": "",
+    "port": "21",
+    "connectionType": "FTP information"
+  },
+  "TestFolder": "TestFiles"
 }

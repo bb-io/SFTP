@@ -1,3 +1,4 @@
+using Apps.SFTP.Api;
 using Apps.SFTP.Dtos;
 using Apps.SFTP.Invocables;
 using Apps.SFTP.Models.Requests;
@@ -20,53 +21,31 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
     public ListDirectoryResponse ListDirectory([ActionParameter] ListDirectoryRequest input)
     {
         var folderPath = string.IsNullOrWhiteSpace(input.FolderPath) ? "/" : input.FolderPath;
+        using var client = FileTransferClientFactory.Create(Creds);
+        client.ConnectAsync().GetAwaiter().GetResult();
 
-        return UseClient(client =>
-        {
-            var filesQuery = client.ListDirectoryAsync(folderPath).GetAwaiter().GetResult()
-                .Where(x => x.IsFile);
-
-            if (input.UpdatedFrom.HasValue)
-            {
-                filesQuery = filesQuery.Where(x => x.LastModified >= input.UpdatedFrom.Value);
-            }
-
-            if (input.UpdatedTo.HasValue)
-            {
-                filesQuery = filesQuery.Where(x => x.LastModified <= input.UpdatedTo.Value);
-            }
-
-            var files = filesQuery.Select(item => new DirectoryItemDto
-            {
-                Name = item.Name,
-                FileId = item.FullName,
-            }).ToList();
-
-            return new ListDirectoryResponse
-            {
-                DirectoriesItems = files,
-                ItemNames = files.Select(x => x.Name)
-            };
-        });
+        return client.ExecuteAsync(() => Task.FromResult(ListDirectoryInternal(client, folderPath, input)))
+            .GetAwaiter()
+            .GetResult();
     }
 
     [Action("Rename file", Description = "Rename a path from old to new")]
     public void RenameFile([ActionParameter] RenameFileRequest input)
     {
         var newFullPath = BuildRenamedPath(input.OldPath, input.NewFileName);
-
-        UseClient(client =>
-        {
-            client.RenameAsync(input.OldPath, newFullPath).GetAwaiter().GetResult();
-            return true;
-        });
+        using var client = FileTransferClientFactory.Create(Creds);
+        client.ConnectAsync().GetAwaiter().GetResult();
+        client.ExecuteAsync(async () => await client.RenameAsync(input.OldPath, newFullPath)).GetAwaiter().GetResult();
     }
 
     [BlueprintActionDefinition(BlueprintAction.DownloadFile)]
     [Action("Download file", Description = "Download file by path")]
     public async Task<DownloadFileResponse> DownloadFile([ActionParameter] DownloadFileRequest input)
     {
-        return await UseClientAsync(async client =>
+        using var client = FileTransferClientFactory.Create(Creds);
+        await client.ConnectAsync();
+
+        return await client.ExecuteAsync(async () =>
         {
             var fileName = Path.GetFileName(input.FileId);
             var mimeType = MimeTypes.GetMimeType(fileName);
@@ -88,7 +67,10 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
     [Action("Upload file", Description = "Upload file by path")]
     public async Task UploadFile([ActionParameter] UploadFileRequest input)
     {
-        await UseClientAsync(async client =>
+        using var client = FileTransferClientFactory.Create(Creds);
+        await client.ConnectAsync();
+
+        await client.ExecuteAsync(async () =>
         {
             using var memoryStream = new MemoryStream();
 
@@ -125,11 +107,40 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
             throw new PluginMisconfigurationException("Please enter a valid path.");
         }
 
-        UseClient(client =>
+        using var client = FileTransferClientFactory.Create(Creds);
+        client.ConnectAsync().GetAwaiter().GetResult();
+        client.ExecuteAsync(async () => await client.DeleteFileAsync(input.FilePath)).GetAwaiter().GetResult();
+    }
+
+    private static ListDirectoryResponse ListDirectoryInternal(
+        FileTransferClient client,
+        string folderPath,
+        ListDirectoryRequest input)
+    {
+        var filesQuery = client.ListDirectoryAsync(folderPath).GetAwaiter().GetResult()
+            .Where(x => x.IsFile);
+
+        if (input.UpdatedFrom.HasValue)
         {
-            client.DeleteFileAsync(input.FilePath).GetAwaiter().GetResult();
-            return true;
-        });
+            filesQuery = filesQuery.Where(x => x.LastModified >= input.UpdatedFrom.Value);
+        }
+
+        if (input.UpdatedTo.HasValue)
+        {
+            filesQuery = filesQuery.Where(x => x.LastModified <= input.UpdatedTo.Value);
+        }
+
+        var files = filesQuery.Select(item => new DirectoryItemDto
+        {
+            Name = item.Name,
+            FileId = item.FullName,
+        }).ToList();
+
+        return new ListDirectoryResponse
+        {
+            DirectoriesItems = files,
+            ItemNames = files.Select(x => x.Name)
+        };
     }
 
     private static string BuildRenamedPath(string oldPath, string newFileName)

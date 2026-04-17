@@ -1,3 +1,4 @@
+using Apps.SFTP.Api;
 using Apps.SFTP.Invocables;
 using Apps.SFTP.Models;
 using Blackbird.Applications.Sdk.Common.Invocation;
@@ -12,11 +13,12 @@ public class FileDataHandler(InvocationContext invocationContext) : FileTransfer
     public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
     {
         var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId;
-        return UseClient(client => client.ListDirectoryAsync(path).GetAwaiter().GetResult())
-            .Where(x => x.Name.Any(y => y != '.'))
-            .Where(x => x.IsDirectory || x.IsFile)
-            .Select(Convert)
-            .ToList<FileDataItem>();
+        using var client = FileTransferClientFactory.Create(Creds);
+        client.ConnectAsync().GetAwaiter().GetResult();
+
+        return client.ExecuteAsync(() => Task.FromResult(GetFolderContentInternal(client, path)))
+            .GetAwaiter()
+            .GetResult();
     }
 
     public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
@@ -45,6 +47,13 @@ public class FileDataHandler(InvocationContext invocationContext) : FileTransfer
 
         return folderPaths;
     }
+
+    private static IEnumerable<FileDataItem> GetFolderContentInternal(FileTransferClient client, string path) =>
+        client.ListDirectoryAsync(path).GetAwaiter().GetResult()
+            .Where(x => x.Name.Any(y => y != '.'))
+            .Where(x => x.IsDirectory || x.IsFile)
+            .Select(Convert)
+            .ToList<FileDataItem>();
 
     private static FileDataItem Convert(FileTransferItem file)
     {

@@ -1,3 +1,4 @@
+using Apps.SFTP.Api;
 using Apps.SFTP.Dtos;
 using Apps.SFTP.Invocables;
 using Apps.SFTP.Models;
@@ -59,7 +60,9 @@ public class FolderPollingList(InvocationContext invocationContext) : FileTransf
 
     private async Task<List<FileTransferItem>> ListFoldersAsync(string folderPath, bool includeSubfolders)
     {
-        var all = await UseClientAsync(async client => (await client.ListDirectoryAsync(folderPath, includeSubfolders)).ToList());
+        using var client = FileTransferClientFactory.Create(Creds);
+        await client.ConnectAsync();
+        var all = await client.ExecuteAsync(async () => (await client.ListDirectoryAsync(folderPath, includeSubfolders)).ToList());
         return all.Where(x => x.IsDirectory).ToList();
     }
 }

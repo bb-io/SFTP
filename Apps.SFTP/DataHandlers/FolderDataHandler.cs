@@ -1,3 +1,4 @@
+using Apps.SFTP.Api;
 using Apps.SFTP.Invocables;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
@@ -10,17 +11,12 @@ public class FolderDataHandler(InvocationContext invocationContext) : FileTransf
     public IEnumerable<FileDataItem> GetFolderContent(FolderContentDataSourceContext context)
     {
         var path = string.IsNullOrEmpty(context.FolderId) ? "/" : context.FolderId;
-        return UseClient(client => client.ListDirectoryAsync(path).GetAwaiter().GetResult())
-            .Where(x => x.IsDirectory)
-            .Where(x => x.Name.Any(y => y != '.'))
-            .Select(x => new Folder
-            {
-                Id = x.FullName,
-                Date = x.LastModified,
-                DisplayName = x.Name,
-                IsSelectable = true
-            })
-            .ToList<FileDataItem>();
+        using var client = FileTransferClientFactory.Create(Creds);
+        client.ConnectAsync().GetAwaiter().GetResult();
+
+        return client.ExecuteAsync(() => Task.FromResult(GetFolderContentInternal(client, path)))
+            .GetAwaiter()
+            .GetResult();
     }
 
     public IEnumerable<FolderPathItem> GetFolderPath(FolderPathDataSourceContext context)
@@ -49,4 +45,17 @@ public class FolderDataHandler(InvocationContext invocationContext) : FileTransf
 
         return folderPaths;
     }
+
+    private static IEnumerable<FileDataItem> GetFolderContentInternal(FileTransferClient client, string path) =>
+        client.ListDirectoryAsync(path).GetAwaiter().GetResult()
+            .Where(x => x.IsDirectory)
+            .Where(x => x.Name.Any(y => y != '.'))
+            .Select(x => new Folder
+            {
+                Id = x.FullName,
+                Date = x.LastModified,
+                DisplayName = x.Name,
+                IsSelectable = true
+            })
+            .ToList<FileDataItem>();
 }

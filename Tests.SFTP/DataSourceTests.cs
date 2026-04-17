@@ -17,7 +17,7 @@ public class DataSourceTests : TestBase
     public const string sizeTestFilename = "test.json";
 
     [TestMethod]
-    public void Folder_data_handler()
+    public async Task Folder_data_handler()
     {
         var handler = new FolderDataHandler(InvocationContext);
 
@@ -26,26 +26,26 @@ public class DataSourceTests : TestBase
         actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = null, Name = "Test 2" });
         actions.CreateDirectory(new CreateDirectoryRequest { FolderPath = "/Test 1", Name = "Test 3" });
 
-        var folders = handler.GetFolderContent(new FolderContentDataSourceContext { FolderId = null });
+        var folders = await handler.GetFolderContentAsync(new FolderContentDataSourceContext { FolderId = null }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(folders, Formatting.Indented));
         Assert.IsTrue(folders.Any(x => x.DisplayName == "Test 1"));
         Assert.IsTrue(folders.Any(x => x.DisplayName == "Test 2"));
 
-        var folders2 = handler.GetFolderContent(new FolderContentDataSourceContext { FolderId = "/Test 1" });
+        var folders2 = await handler.GetFolderContentAsync(new FolderContentDataSourceContext { FolderId = "/Test 1" }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(folders2, Formatting.Indented));
         Assert.IsTrue(folders2.Any(x => x.DisplayName == "Test 3"));
 
-        var breadCrumbs = handler.GetFolderPath(new FolderPathDataSourceContext { FileDataItemId = "/Test 1/test.txt" });
+        var breadCrumbs = await handler.GetFolderPathAsync(new FolderPathDataSourceContext { FileDataItemId = "/Test 1/test.txt" }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(breadCrumbs, Formatting.Indented));
         Assert.IsTrue(breadCrumbs.First().DisplayName == "/");
         Assert.IsTrue(breadCrumbs.Last().DisplayName == "Test 1/");
     }
 
     [TestMethod]
-    public void Folder_data_handler_empty()
+    public async Task Folder_data_handler_empty()
     {
         var handler = new FolderDataHandler(InvocationContext);
-        var folders = handler.GetFolderContent(new FolderContentDataSourceContext { FolderId = "" });
+        var folders = await handler.GetFolderContentAsync(new FolderContentDataSourceContext { FolderId = "" }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(folders, Formatting.Indented));
     }
 
@@ -65,11 +65,11 @@ public class DataSourceTests : TestBase
         };
         await actions.UploadFile(input);
 
-        var folders = handler.GetFolderContent(new FolderContentDataSourceContext { FolderId = null });
+        var folders = await handler.GetFolderContentAsync(new FolderContentDataSourceContext { FolderId = null }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(folders, Formatting.Indented));
         Assert.IsTrue(folders.Any(x => x.DisplayName == fileName));
 
-        var breadCrumbs = handler.GetFolderPath(new FolderPathDataSourceContext { FileDataItemId = "/Test 1/test.txt" });
+        var breadCrumbs = await handler.GetFolderPathAsync(new FolderPathDataSourceContext { FileDataItemId = "/Test 1/test.txt" }, CancellationToken.None);
         Console.WriteLine(JsonConvert.SerializeObject(breadCrumbs, Formatting.Indented));
         Assert.IsTrue(breadCrumbs.First().DisplayName == "/");
 

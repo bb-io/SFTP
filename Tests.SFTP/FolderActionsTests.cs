@@ -1,41 +1,53 @@
-﻿using Apps.SFTP;
+using Apps.SFTP;
 using Apps.SFTP.Models.Requests;
 
-namespace Tests.SFTP
+namespace Tests.SFTP;
+
+[TestClass]
+public class FolderActionsTests : FolderActionsTestsBase
 {
-    [TestClass]
-    public class FolderActionsTests : TestBase
+    public FolderActionsTests() : base("ConnectionDefinition")
     {
-        public const string fileName = "Translate.txt";
-        public const string alternativeFileName = "Translate_renamed.txt";
-        public const string directory = "test2";
+    }
+}
 
-        public const string sizeTestFilename = "test.json";
+[TestClass]
+public class FtpFolderActionsTests : FolderActionsTestsBase
+{
+    public FtpFolderActionsTests() : base("FtpConnectionDefinition")
+    {
+    }
+}
 
-        [TestMethod]
-        public void CreateDirectory_IsOk()
+public abstract class FolderActionsTestsBase : TestBase
+{
+    protected const string DirectoryName = "test2";
+
+    protected FolderActionsTestsBase(string connectionSectionName) : base(connectionSectionName)
+    {
+    }
+
+    [TestMethod]
+    public async Task CreateDirectory_IsOk()
+    {
+        var actions = new FolderActions(InvocationContext);
+        await actions.CreateDirectory(new CreateDirectoryRequest
         {
-            var actions = new FolderActions(InvocationContext);
-            var input = new CreateDirectoryRequest
-            {
-                FolderPath = "/<!&@9fe137c94360b321&>"
-            };
+            FolderPath = "/<!&@9fe137c94360b321&>",
+            Name = DirectoryName
+        });
+    }
 
-            actions.CreateDirectory(input);
-        }
+    [TestMethod]
+    public async Task DeleteDirectory_IsOk()
+    {
+        var actions = new FolderActions(InvocationContext);
+        await actions.CreateDirectory(new CreateDirectoryRequest
+        {
+            FolderPath = null,
+            Name = DirectoryName,
+        });
 
-        [TestMethod]
-        public void DeleteDirectory_IsOk()
-        {            
-            var actions = new FolderActions(InvocationContext);
-            actions.CreateDirectory(new CreateDirectoryRequest
-            {
-                FolderPath = null,
-                Name = directory,
-            });
-            var input = new DeleteDirectoryRequest { FolderPath = directory  };
-
-            actions.DeleteDirectory(input);
-        }
+        await actions.DeleteDirectory(new DeleteDirectoryRequest { FolderPath = DirectoryName });
     }
 }

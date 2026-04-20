@@ -1,31 +1,38 @@
-﻿using Blackbird.Applications.Sdk.Common;
-using Apps.SFTP.Models.Requests;
-using Blackbird.Applications.Sdk.Common.Actions;
-using Blackbird.Applications.Sdk.Common.Invocation;
+using Apps.SFTP.Api;
 using Apps.SFTP.Invocables;
+using Apps.SFTP.Models.Requests;
+using Blackbird.Applications.Sdk.Common;
+using Blackbird.Applications.Sdk.Common.Actions;
+using Blackbird.Applications.Sdk.Common.Exceptions;
+using Blackbird.Applications.Sdk.Common.Invocation;
 
 namespace Apps.SFTP;
 
 [ActionList("Folders")]
-public class FolderActions(InvocationContext context) : SFTPInvocable(context)
+public class FolderActions(InvocationContext context) : FileTransferInvocable(context)
 {
     [Action("Create folder", Description = "Create new folder by path")]
-    public void CreateDirectory([ActionParameter] CreateDirectoryRequest input)
+    public async Task CreateDirectory([ActionParameter] CreateDirectoryRequest input)
     {
-        UseClient(client =>
-        {
-            client.CreateDirectory(input.FolderPath + "/" + input.Name);
-            return true;
-        });
+        var path = string.IsNullOrWhiteSpace(input.FolderPath)
+            ? input.Name
+            : $"{input.FolderPath.TrimEnd('/')}/{input.Name}";
+
+        using var client = FileTransferClientFactory.Create(Creds);
+        await client.ConnectAsync();
+        await client.ExecuteAsync(() => client.CreateDirectoryAsync(path));
     }
 
     [Action("Delete folder", Description = "Delete folder by path")]
-    public void DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
+    public async Task DeleteDirectory([ActionParameter] DeleteDirectoryRequest input)
     {
-        UseClient(client =>
+        if (string.IsNullOrWhiteSpace(input.FolderPath))
         {
-            client.DeleteDirectory(input.FolderPath);
-            return true;
-        });
+            throw new PluginMisconfigurationException("Please enter a valid path.");
+        }
+
+        using var client = FileTransferClientFactory.Create(Creds);
+        await client.ConnectAsync();
+        await client.ExecuteAsync(() => client.DeleteDirectoryAsync(input.FolderPath));
     }
 }

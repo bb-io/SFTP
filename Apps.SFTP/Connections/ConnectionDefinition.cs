@@ -1,4 +1,5 @@
-﻿using Blackbird.Applications.Sdk.Common.Authentication;
+﻿using Apps.SFTP.Constants;
+using Blackbird.Applications.Sdk.Common.Authentication;
 using Blackbird.Applications.Sdk.Common.Connections;
 
 namespace Apps.SFTP.Connections;
@@ -7,44 +8,71 @@ public class ConnectionDefinition : IConnectionDefinition
 {
     public IEnumerable<ConnectionPropertyGroup> ConnectionPropertyGroups => new List<ConnectionPropertyGroup>()
     {
-        new ConnectionPropertyGroup
+        new()
         {
-            Name = "SFTP information",
+            Name = ConnectionTypes.Sftp,
+            DisplayName = "SFTP",
             AuthenticationType = ConnectionAuthenticationType.Undefined,
             ConnectionProperties = new List<ConnectionProperty>()
             {
-                new("host"){ DisplayName = "Host" },
-                new("port"){ DisplayName = "Port"},
-                new("login"){ DisplayName = "Username"},
-                new("password"){ DisplayName = "Password or Private Key", Sensitive = true },
+                new(CredNames.Host)
+                {
+                    DisplayName = "Host"
+                },
+                new(CredNames.Port)
+                {
+                    DisplayName = "Port"
+                },
+                new(CredNames.Login)
+                {
+                    DisplayName = "Username"
+                },
+                new(CredNames.Password)
+                {
+                    DisplayName = "Password or Private Key",
+                    Sensitive = true
+                }
+            }
+        },
+        new() 
+        {
+            Name = ConnectionTypes.Ftp,
+            DisplayName = "FTP",
+            AuthenticationType = ConnectionAuthenticationType.Undefined,
+            ConnectionProperties = new List<ConnectionProperty>()
+            {
+                new(CredNames.Host)
+                {
+                    DisplayName = "Host"
+                },
+                new(CredNames.Port)
+                {
+                    DisplayName = "Port"
+                },
+                new(CredNames.Login)
+                {
+                    DisplayName = "Username"
+                },
+                new(CredNames.Password)
+                {
+                    DisplayName = "Password",
+                    Sensitive = true
+                }
             }
         }
     };
 
     public IEnumerable<AuthenticationCredentialsProvider> CreateAuthorizationCredentialsProviders(Dictionary<string, string> values)
     {
-        var host = values.First(v => v.Key == "host");
-        yield return new AuthenticationCredentialsProvider(
-            host.Key,
-            host.Value
-        );
+        var providers = values.Select(x => new AuthenticationCredentialsProvider(x.Key, x.Value)).ToList();
 
-        var port = values.First(v => v.Key == "port");
-        yield return new AuthenticationCredentialsProvider(
-            port.Key,
-            port.Value
-        );
+        var connectionType = values[nameof(ConnectionPropertyGroup)] switch
+        {
+            var ct when ConnectionTypes.SupportedConnectionTypes.Contains(ct) => ct,
+            _ => throw new Exception($"Unknown connection type: {values[nameof(ConnectionPropertyGroup)]}")
+        };
 
-        var login = values.First(v => v.Key == "login");
-        yield return new AuthenticationCredentialsProvider(
-            login.Key,
-            login.Value
-        );
-
-        var password = values.First(v => v.Key == "password");
-        yield return new AuthenticationCredentialsProvider(
-            password.Key,
-            password.Value
-        );
+        providers.Add(new AuthenticationCredentialsProvider(CredNames.ConnectionType, connectionType));
+        return providers;
     }
 }

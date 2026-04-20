@@ -3,9 +3,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Product>SFTP</Product>
+    <Product>File Transfer (SFTP/FTP)</Product>
     <Version>1.2.21</Version>
-    <Description>SSH File Transfer Protocol</Description>
+    <Description>File transfer over SFTP and FTP</Description>
     <AssemblyName>Apps.SFTP</AssemblyName>
   </PropertyGroup>
   <ItemGroup>

@@ -10,6 +10,6 @@ public class RenameFileRequest
     [FileDataSource(typeof(FileDataHandler))]
     public string OldPath { get; set; }
 
-    [Display("New file name")]
+    [Display("New file name", Description = "The new file name or the full destination path")]
     public string NewFileName { get; set; }
 }

@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Product>SFTP &amp; FTP</Product>
-    <Version>1.2.21</Version>
+    <Version>1.2.22</Version>
     <Description>File transfer over SFTP and FTP</Description>
     <AssemblyName>Apps.SFTP</AssemblyName>
   </PropertyGroup>

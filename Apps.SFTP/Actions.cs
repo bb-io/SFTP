@@ -143,14 +143,18 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
 
     private static string BuildRenamedPath(string oldPath, string newFileName)
     {
+        var normalizedNewFileName = newFileName.Replace('\\', '/');
+        if (normalizedNewFileName.StartsWith('/'))
+            return normalizedNewFileName;
+
         var normalizedOldPath = oldPath.Replace('\\', '/');
         var lastSlashIndex = normalizedOldPath.LastIndexOf('/');
 
         return lastSlashIndex switch
         {
-            < 0 => newFileName,
-            0 => $"/{newFileName}",
-            _ => $"{normalizedOldPath[..lastSlashIndex]}/{newFileName}"
+            < 0 => normalizedNewFileName,
+            0 => $"/{normalizedNewFileName}",
+            _ => $"{normalizedOldPath[..lastSlashIndex]}/{normalizedNewFileName}"
         };
     }
 }

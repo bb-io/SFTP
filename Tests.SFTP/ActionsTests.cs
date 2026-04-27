@@ -78,14 +78,17 @@ public abstract class ActionsTestsBase : TestBase
     {
         await UploadFile_IsOk();
 
+        string targetDirectory = "/test2";
         var actions = new Actions(InvocationContext, FileManager);
         await actions.RenameFile(new RenameFileRequest
         {
-            NewFileName = AlternativeFileName,
-            OldPath = DirectoryPath + '/' + FileName
+            NewFileName = $"{targetDirectory}/{AlternativeFileName}",
+            OldPath = $"{DirectoryPath}/{FileName}"
         });
-
-        Assert.IsTrue(await DoesFileExist(DirectoryPath, AlternativeFileName));
+        
+        
+        Assert.IsFalse(await DoesFileExist(DirectoryPath, FileName), "File should no longer be in the old directory.");
+        Assert.IsTrue(await DoesFileExist(targetDirectory, AlternativeFileName), "File was not found in the new directory.");
     }
 
     [TestMethod]

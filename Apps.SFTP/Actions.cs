@@ -9,6 +9,7 @@ using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
+using Renci.SshNet.Common;
 using RestSharp;
 
 namespace Apps.SFTP;
@@ -33,6 +34,8 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
         var newFullPath = BuildRenamedPath(input.OldPath, input.NewFileName);
         using var client = FileTransferClientFactory.Create(Creds);
         await client.ConnectAsync();
+        var targetDirectory = GetDirectoryPath(newFullPath);
+        await EnsureDirectoryExistsAsync(client, targetDirectory);
         await client.ExecuteAsync(() => client.RenameAsync(input.OldPath, newFullPath));
     }
 
@@ -156,5 +159,77 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
             0 => $"/{normalizedNewFileName}",
             _ => $"{normalizedOldPath[..lastSlashIndex]}/{normalizedNewFileName}"
         };
+    }
+
+    private static string? GetDirectoryPath(string fullPath)
+    {
+        var normalized = fullPath.Replace('\\', '/').TrimEnd('/');
+        var lastSlashIndex = normalized.LastIndexOf('/');
+
+        return lastSlashIndex switch
+        {
+            < 0 => null,
+            0 => "/",
+            _ => normalized[..lastSlashIndex]
+        };
+    }
+
+    private static async Task EnsureDirectoryExistsAsync(FileTransferClient client, string? directoryPath)
+    {
+        if (string.IsNullOrWhiteSpace(directoryPath) || directoryPath == "/")
+        {
+            return;
+        }
+
+        var normalized = directoryPath.Replace('\\', '/').TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(normalized) || normalized == "/")
+        {
+            return;
+        }
+
+        var isAbsolute = normalized.StartsWith('/');
+        var parts = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var currentPath = isAbsolute ? "/" : string.Empty;
+
+        foreach (var part in parts)
+        {
+            currentPath = string.IsNullOrEmpty(currentPath) || currentPath == "/"
+                ? $"{currentPath}{part}"
+                : $"{currentPath}/{part}";
+
+            if (await DirectoryExistsAsync(client, currentPath))
+            {
+                continue;
+            }
+
+            await client.ExecuteAsync(() => client.CreateDirectoryAsync(currentPath));
+        }
+    }
+
+    private static async Task<bool> DirectoryExistsAsync(FileTransferClient client, string path)
+    {
+        try
+        {
+            var info = await client.ExecuteAsync(() => client.GetFileInfoAsync(path));
+            if (!info.IsDirectory)
+            {
+                throw new PluginMisconfigurationException($"Path exists and is not a directory: {path}");
+            }
+
+            return true;
+        }
+        catch (PluginMisconfigurationException ex)
+            when (ex.Message.StartsWith("File or path not found:", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+        catch (SftpPathNotFoundException)
+        {
+            return false;
+        }
+        catch (AggregateException ex) when (ex.GetBaseException() is SftpPathNotFoundException)
+        {
+            return false;
+        }
     }
 }

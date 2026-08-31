@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using System.Text;
 using Apps.SFTP.Constants;
 using Apps.SFTP.Models;
@@ -89,6 +90,9 @@ public class BlackbirdSftpClient : FileTransferClient
 
     protected override Exception TranslateException(Exception ex) => ex switch
     {
+        SocketException => new PluginApplicationException(
+            $"Could not reach the server at {_client.ConnectionInfo.Host}:{_client.ConnectionInfo.Port}. {ex.Message} " +
+            "Please check the host and port in your connection and make sure the server is running and reachable."),
         SshAuthenticationException => new PluginMisconfigurationException($"Authentication failed: {ex.Message}"),
         SftpPathNotFoundException => new PluginMisconfigurationException($"File or path not found: {ex.Message}"),
         SshException => new PluginApplicationException($"SFTP/SSH connection error: {ex.Message}"),

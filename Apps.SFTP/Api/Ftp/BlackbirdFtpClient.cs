@@ -63,7 +63,16 @@ public class BlackbirdFtpClient : FileTransferClient
 
     public override async Task UploadAsync(Stream stream, string remotePath)
     {
-        await _client.UploadStream(stream, remotePath);
+        if (stream.CanSeek)
+        {
+            await _client.UploadStream(stream, remotePath);
+            return;
+        }
+
+        await using var seekableStream = new MemoryStream();
+        await stream.CopyToAsync(seekableStream);
+        seekableStream.Position = 0;
+        await _client.UploadStream(seekableStream, remotePath);
     }
 
     public override async Task DownloadAsync(string remotePath, Stream destination)

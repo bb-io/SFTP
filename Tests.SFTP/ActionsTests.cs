@@ -172,6 +172,37 @@ public abstract class ActionsTestsBase : TestBase
     }
 
     [TestMethod]
+    public async Task UploadFile_larger_than_ssh_packet_is_uploaded_completely()
+    {
+        const string largeFileName = "large_upload_test.bin";
+        const int largeFileSize = 1024 * 1024 + 123;
+        var largeFileContent = new byte[largeFileSize];
+        new Random(42).NextBytes(largeFileContent);
+        var inputPath = Path.Combine(FileManager.inputFolder, largeFileName);
+        await File.WriteAllBytesAsync(inputPath, largeFileContent);
+
+        try
+        {
+            var actions = new Actions(InvocationContext, FileManager);
+            await actions.UploadFile(new UploadFileRequest
+            {
+                File = new FileReference { Name = largeFileName },
+                Path = DirectoryPath,
+            });
+
+            await actions.DownloadFile(new DownloadFileRequest { FileId = $"{DirectoryPath}/{largeFileName}" });
+
+            var downloadedContent = await File.ReadAllBytesAsync(Path.Combine(FileManager.outputFolder, largeFileName));
+            CollectionAssert.AreEqual(largeFileContent, downloadedContent);
+        }
+        finally
+        {
+            File.Delete(inputPath);
+            File.Delete(Path.Combine(FileManager.outputFolder, largeFileName));
+        }
+    }
+
+    [TestMethod]
     public async Task DownloadFile__IsOk()
     {
         await UploadFile_IsOk();

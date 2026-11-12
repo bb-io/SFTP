@@ -8,6 +8,7 @@ using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Exceptions;
+using Blackbird.Applications.Sdk.Common.Files;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Renci.SshNet.Common;
 using RestSharp;
@@ -73,30 +74,11 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
 
         await client.ExecuteAsync(async () =>
         {
-            using var memoryStream = new MemoryStream();
-
-            if (input.File.Url == null)
-            {
-                var fileStream = await fileManagementClient.DownloadAsync(input.File);
-                await fileStream.CopyToAsync(memoryStream);
-                memoryStream.Position = 0;
-            }
-            else
-            {
-                var restClient = new RestClient(input.File.Url);
-                using var responseStream = restClient.DownloadStream(new RestRequest());
-                if (responseStream == null)
-                {
-                    throw new PluginApplicationException("Failed to download the file from the provided URL.");
-                }
-
-                await responseStream.CopyToAsync(memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
-            }
+            await using var sourceStream = await OpenSourceFileStreamAsync(input.File);
 
             var fileName = input.FileName ?? input.File.Name;
             var path = input.Path ?? "/";
-            await client.UploadAsync(memoryStream, $"{path.TrimEnd('/')}/{fileName}");
+            await client.UploadAsync(sourceStream, $"{path.TrimEnd('/')}/{fileName}");
         });
     }
 
@@ -111,6 +93,18 @@ public class Actions(InvocationContext context, IFileManagementClient fileManage
         using var client = FileTransferClientFactory.Create(Creds);
         await client.ConnectAsync();
         await client.ExecuteAsync(() => client.DeleteFileAsync(input.FilePath));
+    }
+
+    private async Task<Stream> OpenSourceFileStreamAsync(FileReference file)
+    {
+        if (file.Url == null)
+        {
+            return await fileManagementClient.DownloadAsync(file);
+        }
+
+        var restClient = new RestClient(file.Url);
+        return restClient.DownloadStream(new RestRequest())
+            ?? throw new PluginApplicationException("Failed to download the file from the provided URL.");
     }
 
     private static async Task<ListDirectoryResponse> ListDirectoryInternal(

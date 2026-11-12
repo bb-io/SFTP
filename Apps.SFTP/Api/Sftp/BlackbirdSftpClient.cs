@@ -12,6 +12,8 @@ namespace Apps.SFTP.Api.Sftp;
 
 public class BlackbirdSftpClient : FileTransferClient
 {
+    private const uint MaximumBufferSizeAcceptedBySshNet = 64 * 1024;
+
     private readonly SftpClient _client;
     private bool _disposed;
 
@@ -21,7 +23,7 @@ public class BlackbirdSftpClient : FileTransferClient
     {
         _client = new SftpClient(GetConnectionInfo(authenticationCredentialsProviders))
         {
-            BufferSize = 32 * 1024 * 12,
+            BufferSize = MaximumBufferSizeAcceptedBySshNet,
             KeepAliveInterval = TimeSpan.FromSeconds(30),
             OperationTimeout = TimeSpan.FromSeconds(60)
         };

@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Product>SFTP &amp; FTP</Product>
-    <Version>1.2.24</Version>
+    <Version>1.2.25</Version>
     <Description>File transfer over SFTP and FTP</Description>
     <AssemblyName>Apps.SFTP</AssemblyName>
   </PropertyGroup>
@@ -17,7 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SSH.NET" Version="2024.1.0" />
+    <PackageReference Include="SSH.NET" Version="2026.0.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource CopyToOutputDirectory="Always" Include="image\icon.png"></EmbeddedResource>

@@ -2,6 +2,7 @@ using System.Net.Sockets;
 using System.Text;
 using Apps.SFTP.Constants;
 using Apps.SFTP.Models;
+using Apps.SFTP.Utils;
 using Blackbird.Applications.Sdk.Common.Authentication;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Renci.SshNet;
@@ -132,7 +133,7 @@ public class BlackbirdSftpClient : FileTransferClient
             return new ConnectionInfo(host, int.Parse(port), login, new PasswordAuthenticationMethod(login, password));
         }
 
-        var bytes = Encoding.UTF8.GetBytes(password);
+        var bytes = Encoding.UTF8.GetBytes(PrivateKeyNormalizer.Normalize(password));
         var key = new PrivateKeyFile(new MemoryStream(bytes));
         return new ConnectionInfo(host, int.Parse(port), login, new PrivateKeyAuthenticationMethod(login, key));
     }
